@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/lupppig/mano-reck/backend/internal/platform/database"
-	"github.com/lupppig/mano-reck/backend/internal/platform/event"
-	"github.com/lupppig/mano-reck/backend/internal/platform/identifier"
+	"github.com/lupppig/credar/backend/internal/platform/database"
+	"github.com/lupppig/credar/backend/internal/platform/event"
+	"github.com/lupppig/credar/backend/internal/platform/identifier"
 )
 
 // Record is one leased outbox event ready for publication.

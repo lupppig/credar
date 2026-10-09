@@ -5,8 +5,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Mano Reck Console",
-    template: "%s · Mano Reck",
+    default: "Credar Console",
+    template: "%s · Credar",
   },
   description: "Enterprise operations for multi-tenant credit infrastructure",
 };
@@ -22,12 +22,12 @@ export default function RootLayout({
         </a>
         <div className="app-frame">
           <header className="app-header">
-            <div className="brand" aria-label="Mano Reck">
+            <div className="brand" aria-label="Credar">
               <span className="brand-mark" aria-hidden="true">
                 MR
               </span>
               <span>
-                <strong>Mano Reck</strong>
+                <strong>Credar</strong>
                 <small>Enterprise console</small>
               </span>
             </div>

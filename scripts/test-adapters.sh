@@ -3,13 +3,13 @@ set -euo pipefail
 
 readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly compose_file="${repository_root}/deploy/compose.yaml"
-readonly project_name="manoreck-adapters-test-$$"
+readonly project_name="credar-adapters-test-$$"
 readonly port_offset=$((50000 + ($$ % 10000)))
 readonly redis_port=$((port_offset + 1))
 readonly seaweedfs_port=$((port_offset + 2))
 
-export MANORECK_REDIS_HOST_PORT="${redis_port}"
-export MANORECK_SEAWEEDFS_HOST_PORT="${seaweedfs_port}"
+export CREDAR_REDIS_HOST_PORT="${redis_port}"
+export CREDAR_SEAWEEDFS_HOST_PORT="${seaweedfs_port}"
 
 compose() {
   docker compose --project-name "${project_name}" --file "${compose_file}" "$@"
@@ -34,12 +34,12 @@ compose up --detach --wait --wait-timeout 120 redis seaweedfs
 (
   cd "${repository_root}/backend"
   CGO_ENABLED=0 \
-    MANORECK_TEST_REDIS_URL="redis://127.0.0.1:${redis_port}/0" \
-    MANORECK_TEST_REDIS_KEY_PREFIX="manoreck_test_$$" \
-    MANORECK_TEST_OBJECT_STORAGE_ENDPOINT="http://127.0.0.1:${seaweedfs_port}" \
-    MANORECK_TEST_OBJECT_STORAGE_BUCKET="manoreck-test-$$" \
-    MANORECK_TEST_OBJECT_STORAGE_ACCESS_KEY="local-access-key" \
-    MANORECK_TEST_OBJECT_STORAGE_SECRET_KEY="local-secret-key" \
+    CREDAR_TEST_REDIS_URL="redis://127.0.0.1:${redis_port}/0" \
+    CREDAR_TEST_REDIS_KEY_PREFIX="credar_test_$$" \
+    CREDAR_TEST_OBJECT_STORAGE_ENDPOINT="http://127.0.0.1:${seaweedfs_port}" \
+    CREDAR_TEST_OBJECT_STORAGE_BUCKET="credar-test-$$" \
+    CREDAR_TEST_OBJECT_STORAGE_ACCESS_KEY="local-access-key" \
+    CREDAR_TEST_OBJECT_STORAGE_SECRET_KEY="local-secret-key" \
     go test -tags=integration \
       ./internal/platform/redisclient \
       ./internal/platform/objectstorage

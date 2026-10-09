@@ -11,10 +11,10 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lupppig/mano-reck/backend/internal/platform/dependency"
-	platformhttp "github.com/lupppig/mano-reck/backend/internal/platform/httpserver"
-	"github.com/lupppig/mano-reck/backend/internal/platform/identifier"
-	"github.com/lupppig/mano-reck/backend/internal/platform/requestcontext"
+	"github.com/lupppig/credar/backend/internal/platform/dependency"
+	platformhttp "github.com/lupppig/credar/backend/internal/platform/httpserver"
+	"github.com/lupppig/credar/backend/internal/platform/identifier"
+	"github.com/lupppig/credar/backend/internal/platform/requestcontext"
 )
 
 func TestHealthEndpointReportsProcessHealth(t *testing.T) {

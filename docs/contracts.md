@@ -86,16 +86,16 @@ follow `contracts/events/public/envelope-v1.schema.json`.
 - `correlation_id` traces the originating intent; `causation_id` identifies the
   request or event that directly caused this event.
 
-Internal event subjects use `manoreck.events.<type>.v<version>`. Each consumer
+Internal event subjects use `credar.events.<type>.v<version>`. Each consumer
 owns a stable, descriptive durable name ending in its contract version, such as
-`manoreck-infrastructure-proof-v1`; changing consumer behavior incompatibly
+`credar-infrastructure-proof-v1`; changing consumer behavior incompatibly
 requires a new durable version. Delivery is at least once. Producers preserve
 the envelope event ID across retries, and consumers commit an event-ID receipt
 in the same database transaction as their side effects before acknowledging
 the broker message.
 
 Poison messages exhaust a bounded retry policy before a diagnostic record is
-published under `manoreck.dead.<original-subject>`. Dead-letter diagnostics may
+published under `credar.dead.<original-subject>`. Dead-letter diagnostics may
 identify the consumer, event, subject, delivery count, failure reason, and a
 payload hash, but do not copy the original payload because it may contain
 sensitive data.

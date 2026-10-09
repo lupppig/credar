@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/dependency"
+	"github.com/lupppig/credar/backend/internal/platform/dependency"
 )
 
 func TestSetStartsInOrderAndClosesInReverse(t *testing.T) {

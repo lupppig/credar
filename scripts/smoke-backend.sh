@@ -4,8 +4,8 @@ set -euo pipefail
 readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly smoke_address="127.0.0.1:18080"
 readonly smoke_url="http://${smoke_address}/healthz"
-readonly binary_path="${repository_root}/bin/manoreck-api"
-readonly log_path="$(mktemp /tmp/manoreck-backend-smoke.XXXXXX.log)"
+readonly binary_path="${repository_root}/bin/credar-api"
+readonly log_path="$(mktemp /tmp/credar-backend-smoke.XXXXXX.log)"
 
 mkdir -p "${repository_root}/bin"
 (
@@ -13,7 +13,7 @@ mkdir -p "${repository_root}/bin"
   go build -trimpath -o "${binary_path}" ./cmd/api
 )
 
-MANORECK_HTTP_ADDRESS="${smoke_address}" "${binary_path}" >"${log_path}" 2>&1 &
+CREDAR_HTTP_ADDRESS="${smoke_address}" "${binary_path}" >"${log_path}" 2>&1 &
 server_pid=$!
 trap 'kill "${server_pid}" >/dev/null 2>&1 || true; wait "${server_pid}" >/dev/null 2>&1 || true; rm -f "${log_path}"' EXIT
 

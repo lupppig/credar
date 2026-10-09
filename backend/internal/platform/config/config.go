@@ -18,7 +18,7 @@ const (
 	defaultHTTPAddress             = ":8080"
 	defaultShutdownTimeoutSeconds  = 10
 	defaultReadinessTimeoutSeconds = 2
-	defaultDatabaseURL             = "postgres://manoreck:manoreck_local@127.0.0.1:5432/manoreck?sslmode=disable"
+	defaultDatabaseURL             = "postgres://credar:credar_local@127.0.0.1:5432/credar?sslmode=disable"
 	defaultDatabaseMaxConnections  = 10
 	defaultDatabaseMinConnections  = 1
 	defaultNATSURL                 = "nats://127.0.0.1:4222"
@@ -29,9 +29,9 @@ const (
 	defaultOutboxBaseBackoff       = 1
 	defaultOutboxMaxBackoff        = 300
 	defaultRedisURL                = "redis://127.0.0.1:6379/0"
-	defaultRedisKeyPrefix          = "manoreck"
+	defaultRedisKeyPrefix          = "credar"
 	defaultObjectStorageEndpoint   = "http://127.0.0.1:8333"
-	defaultObjectStorageBucket     = "manoreck-local"
+	defaultObjectStorageBucket     = "credar-local"
 	defaultObjectStorageAccessKey  = "local-access-key"
 	defaultObjectStorageSecretKey  = "local-secret-key"
 )
@@ -116,30 +116,30 @@ func (Secret) GoString() string {
 
 // Load reads every runtime value once and rejects malformed configuration.
 func Load(lookup LookupEnv) (Config, error) {
-	environment := valueOrDefault(lookup, "MANORECK_ENVIRONMENT", defaultEnvironment)
+	environment := valueOrDefault(lookup, "CREDAR_ENVIRONMENT", defaultEnvironment)
 	switch environment {
 	case "local", "test", "sandbox":
 	default:
 		return Config{}, fmt.Errorf(
-			"MANORECK_ENVIRONMENT must be one of local, test, or sandbox, got %q",
+			"CREDAR_ENVIRONMENT must be one of local, test, or sandbox, got %q",
 			environment,
 		)
 	}
 
-	logLevelValue := valueOrDefault(lookup, "MANORECK_LOG_LEVEL", defaultLogLevel)
+	logLevelValue := valueOrDefault(lookup, "CREDAR_LOG_LEVEL", defaultLogLevel)
 	var logLevel slog.Level
 	if err := logLevel.UnmarshalText([]byte(logLevelValue)); err != nil {
-		return Config{}, fmt.Errorf("MANORECK_LOG_LEVEL %q is invalid: %w", logLevelValue, err)
+		return Config{}, fmt.Errorf("CREDAR_LOG_LEVEL %q is invalid: %w", logLevelValue, err)
 	}
 
-	httpAddress := valueOrDefault(lookup, "MANORECK_HTTP_ADDRESS", defaultHTTPAddress)
+	httpAddress := valueOrDefault(lookup, "CREDAR_HTTP_ADDRESS", defaultHTTPAddress)
 	if err := validateAddress(httpAddress); err != nil {
-		return Config{}, fmt.Errorf("MANORECK_HTTP_ADDRESS %q is invalid: %w", httpAddress, err)
+		return Config{}, fmt.Errorf("CREDAR_HTTP_ADDRESS %q is invalid: %w", httpAddress, err)
 	}
 
 	shutdownTimeout, err := seconds(
 		lookup,
-		"MANORECK_HTTP_SHUTDOWN_TIMEOUT_SECONDS",
+		"CREDAR_HTTP_SHUTDOWN_TIMEOUT_SECONDS",
 		defaultShutdownTimeoutSeconds,
 	)
 	if err != nil {
@@ -148,20 +148,20 @@ func Load(lookup LookupEnv) (Config, error) {
 
 	readinessTimeout, err := seconds(
 		lookup,
-		"MANORECK_READINESS_TIMEOUT_SECONDS",
+		"CREDAR_READINESS_TIMEOUT_SECONDS",
 		defaultReadinessTimeoutSeconds,
 	)
 	if err != nil {
 		return Config{}, err
 	}
 
-	databaseURL := valueOrDefault(lookup, "MANORECK_DATABASE_URL", defaultDatabaseURL)
+	databaseURL := valueOrDefault(lookup, "CREDAR_DATABASE_URL", defaultDatabaseURL)
 	if err := validateDatabaseURL(databaseURL); err != nil {
-		return Config{}, fmt.Errorf("MANORECK_DATABASE_URL is invalid: %w", err)
+		return Config{}, fmt.Errorf("CREDAR_DATABASE_URL is invalid: %w", err)
 	}
 	databaseMaxConnections, err := integer(
 		lookup,
-		"MANORECK_DATABASE_MAX_CONNECTIONS",
+		"CREDAR_DATABASE_MAX_CONNECTIONS",
 		defaultDatabaseMaxConnections,
 		1,
 		100,
@@ -171,7 +171,7 @@ func Load(lookup LookupEnv) (Config, error) {
 	}
 	databaseMinConnections, err := integer(
 		lookup,
-		"MANORECK_DATABASE_MIN_CONNECTIONS",
+		"CREDAR_DATABASE_MIN_CONNECTIONS",
 		defaultDatabaseMinConnections,
 		0,
 		databaseMaxConnections,
@@ -180,13 +180,13 @@ func Load(lookup LookupEnv) (Config, error) {
 		return Config{}, err
 	}
 
-	natsURL := valueOrDefault(lookup, "MANORECK_NATS_URL", defaultNATSURL)
+	natsURL := valueOrDefault(lookup, "CREDAR_NATS_URL", defaultNATSURL)
 	if err := validateNATSURL(natsURL); err != nil {
-		return Config{}, fmt.Errorf("MANORECK_NATS_URL is invalid: %w", err)
+		return Config{}, fmt.Errorf("CREDAR_NATS_URL is invalid: %w", err)
 	}
 	outboxPollMilliseconds, err := integer(
 		lookup,
-		"MANORECK_OUTBOX_POLL_MILLISECONDS",
+		"CREDAR_OUTBOX_POLL_MILLISECONDS",
 		defaultOutboxPollMilliseconds,
 		10,
 		60000,
@@ -196,7 +196,7 @@ func Load(lookup LookupEnv) (Config, error) {
 	}
 	outboxLeaseSeconds, err := integer(
 		lookup,
-		"MANORECK_OUTBOX_LEASE_SECONDS",
+		"CREDAR_OUTBOX_LEASE_SECONDS",
 		defaultOutboxLeaseSeconds,
 		1,
 		3600,
@@ -206,7 +206,7 @@ func Load(lookup LookupEnv) (Config, error) {
 	}
 	outboxBatchSize, err := integer(
 		lookup,
-		"MANORECK_OUTBOX_BATCH_SIZE",
+		"CREDAR_OUTBOX_BATCH_SIZE",
 		defaultOutboxBatchSize,
 		1,
 		1000,
@@ -216,7 +216,7 @@ func Load(lookup LookupEnv) (Config, error) {
 	}
 	outboxMaxAttempts, err := integer(
 		lookup,
-		"MANORECK_OUTBOX_MAX_ATTEMPTS",
+		"CREDAR_OUTBOX_MAX_ATTEMPTS",
 		defaultOutboxMaxAttempts,
 		1,
 		100,
@@ -226,7 +226,7 @@ func Load(lookup LookupEnv) (Config, error) {
 	}
 	outboxBaseBackoff, err := integer(
 		lookup,
-		"MANORECK_OUTBOX_BASE_BACKOFF_SECONDS",
+		"CREDAR_OUTBOX_BASE_BACKOFF_SECONDS",
 		defaultOutboxBaseBackoff,
 		1,
 		3600,
@@ -236,7 +236,7 @@ func Load(lookup LookupEnv) (Config, error) {
 	}
 	outboxMaxBackoff, err := integer(
 		lookup,
-		"MANORECK_OUTBOX_MAX_BACKOFF_SECONDS",
+		"CREDAR_OUTBOX_MAX_BACKOFF_SECONDS",
 		defaultOutboxMaxBackoff,
 		outboxBaseBackoff,
 		86400,
@@ -245,46 +245,46 @@ func Load(lookup LookupEnv) (Config, error) {
 		return Config{}, err
 	}
 
-	redisURL := valueOrDefault(lookup, "MANORECK_REDIS_URL", defaultRedisURL)
+	redisURL := valueOrDefault(lookup, "CREDAR_REDIS_URL", defaultRedisURL)
 	if err := validateRedisURL(redisURL); err != nil {
-		return Config{}, fmt.Errorf("MANORECK_REDIS_URL is invalid: %w", err)
+		return Config{}, fmt.Errorf("CREDAR_REDIS_URL is invalid: %w", err)
 	}
-	redisKeyPrefix := valueOrDefault(lookup, "MANORECK_REDIS_KEY_PREFIX", defaultRedisKeyPrefix)
+	redisKeyPrefix := valueOrDefault(lookup, "CREDAR_REDIS_KEY_PREFIX", defaultRedisKeyPrefix)
 	if !redisKeyPrefixPattern.MatchString(redisKeyPrefix) {
-		return Config{}, fmt.Errorf("MANORECK_REDIS_KEY_PREFIX must be 2-63 lowercase letters, digits, underscores, or hyphens")
+		return Config{}, fmt.Errorf("CREDAR_REDIS_KEY_PREFIX must be 2-63 lowercase letters, digits, underscores, or hyphens")
 	}
 
 	objectStorageEndpoint := valueOrDefault(
 		lookup,
-		"MANORECK_OBJECT_STORAGE_ENDPOINT",
+		"CREDAR_OBJECT_STORAGE_ENDPOINT",
 		defaultObjectStorageEndpoint,
 	)
 	if err := validateObjectStorageEndpoint(objectStorageEndpoint); err != nil {
-		return Config{}, fmt.Errorf("MANORECK_OBJECT_STORAGE_ENDPOINT is invalid: %w", err)
+		return Config{}, fmt.Errorf("CREDAR_OBJECT_STORAGE_ENDPOINT is invalid: %w", err)
 	}
 	objectStorageBucket := valueOrDefault(
 		lookup,
-		"MANORECK_OBJECT_STORAGE_BUCKET",
+		"CREDAR_OBJECT_STORAGE_BUCKET",
 		defaultObjectStorageBucket,
 	)
 	if !validBucketName(objectStorageBucket) {
-		return Config{}, fmt.Errorf("MANORECK_OBJECT_STORAGE_BUCKET must be a valid 3-63 character lowercase S3 bucket name")
+		return Config{}, fmt.Errorf("CREDAR_OBJECT_STORAGE_BUCKET must be a valid 3-63 character lowercase S3 bucket name")
 	}
 	objectStorageAccessKey := valueOrDefault(
 		lookup,
-		"MANORECK_OBJECT_STORAGE_ACCESS_KEY",
+		"CREDAR_OBJECT_STORAGE_ACCESS_KEY",
 		defaultObjectStorageAccessKey,
 	)
 	if objectStorageAccessKey == "" {
-		return Config{}, fmt.Errorf("MANORECK_OBJECT_STORAGE_ACCESS_KEY must not be empty")
+		return Config{}, fmt.Errorf("CREDAR_OBJECT_STORAGE_ACCESS_KEY must not be empty")
 	}
 	objectStorageSecretKey := valueOrDefault(
 		lookup,
-		"MANORECK_OBJECT_STORAGE_SECRET_KEY",
+		"CREDAR_OBJECT_STORAGE_SECRET_KEY",
 		defaultObjectStorageSecretKey,
 	)
 	if objectStorageSecretKey == "" {
-		return Config{}, fmt.Errorf("MANORECK_OBJECT_STORAGE_SECRET_KEY must not be empty")
+		return Config{}, fmt.Errorf("CREDAR_OBJECT_STORAGE_SECRET_KEY must not be empty")
 	}
 
 	return Config{

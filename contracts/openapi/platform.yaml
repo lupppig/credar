@@ -1,6 +1,6 @@
 openapi: 3.1.1
 info:
-  title: Mano Reck Platform API
+  title: Credar Platform API
   version: 0.1.0
   description: >-
     Shared transport conventions for the multi-tenant credit platform. Product

@@ -67,7 +67,7 @@ test: unit integration ## Run unit and integration tests.
 
 build: ## Build production backend and frontend artifacts.
 	@mkdir -p bin
-	@cd backend && go build -trimpath -o ../bin/manoreck-api ./cmd/api
+	@cd backend && go build -trimpath -o ../bin/credar-api ./cmd/api
 	@pnpm --dir frontend build
 
 smoke: smoke-backend smoke-frontend ## Start each built application and probe its public surface.

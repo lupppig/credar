@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/event"
-	"github.com/lupppig/mano-reck/backend/internal/platform/outbox"
+	"github.com/lupppig/credar/backend/internal/platform/event"
+	"github.com/lupppig/credar/backend/internal/platform/outbox"
 )
 
 func TestInsertRejectsInvalidEnvelopeBeforeDatabaseAccess(t *testing.T) {

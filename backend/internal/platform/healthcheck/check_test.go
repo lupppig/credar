@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/healthcheck"
+	"github.com/lupppig/credar/backend/internal/platform/healthcheck"
 )
 
 func TestCheckAcceptsReadyResponse(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/identifier"
+	"github.com/lupppig/credar/backend/internal/platform/identifier"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/s3utils"

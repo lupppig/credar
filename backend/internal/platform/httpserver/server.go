@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lupppig/mano-reck/backend/internal/platform/dependency"
-	"github.com/lupppig/mano-reck/backend/internal/platform/identifier"
-	"github.com/lupppig/mano-reck/backend/internal/platform/requestcontext"
+	"github.com/lupppig/credar/backend/internal/platform/dependency"
+	"github.com/lupppig/credar/backend/internal/platform/identifier"
+	"github.com/lupppig/credar/backend/internal/platform/requestcontext"
 )
 
 const (

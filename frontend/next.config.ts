@@ -6,7 +6,7 @@ const publicEnvironment = loadPublicEnvironment();
 
 const nextConfig: NextConfig = {
   env: {
-    NEXT_PUBLIC_MANORECK_API_BASE_URL: publicEnvironment.apiBaseUrl,
+    NEXT_PUBLIC_CREDAR_API_BASE_URL: publicEnvironment.apiBaseUrl,
   },
   output: "standalone",
   poweredByHeader: false,

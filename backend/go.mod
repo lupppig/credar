@@ -1,4 +1,4 @@
-module github.com/lupppig/mano-reck/backend
+module github.com/lupppig/credar/backend
 
 go 1.27.1
 

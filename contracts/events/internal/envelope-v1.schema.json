@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:manoreck:schema:events:internal:envelope:v1",
-  "title": "Mano Reck integration event envelope v1",
+  "$id": "urn:credar:schema:events:internal:envelope:v1",
+  "title": "Credar integration event envelope v1",
   "type": "object",
   "additionalProperties": false,
   "required": [

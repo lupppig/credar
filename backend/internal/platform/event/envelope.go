@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/identifier"
+	"github.com/lupppig/credar/backend/internal/platform/identifier"
 )
 
 var (
@@ -82,7 +82,7 @@ func (envelope Envelope) Subject() (string, error) {
 	if err := envelope.Validate(); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("manoreck.events.%s.v%d", envelope.Type, envelope.Version), nil
+	return fmt.Sprintf("credar.events.%s.v%d", envelope.Type, envelope.Version), nil
 }
 
 func isJSONObject(data json.RawMessage) bool {

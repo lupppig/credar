@@ -6,12 +6,12 @@ RUN npm install --global pnpm@12.5.1
 WORKDIR /source
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY frontend/package.json ./frontend/package.json
-RUN pnpm install --frozen-lockfile --filter @mano-reck/frontend...
+RUN pnpm install --frozen-lockfile --filter @credar/frontend...
 
 FROM dependencies AS build
 
-ARG NEXT_PUBLIC_MANORECK_API_BASE_URL=http://localhost:8080
-ENV NEXT_PUBLIC_MANORECK_API_BASE_URL=${NEXT_PUBLIC_MANORECK_API_BASE_URL}
+ARG NEXT_PUBLIC_CREDAR_API_BASE_URL=http://localhost:8080
+ENV NEXT_PUBLIC_CREDAR_API_BASE_URL=${NEXT_PUBLIC_CREDAR_API_BASE_URL}
 
 COPY frontend/ ./frontend/
 RUN pnpm --dir frontend build

@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/lupppig/mano-reck/backend/internal/platform/database"
+	"github.com/lupppig/credar/backend/internal/platform/database"
 )
 
 func TestPostgreSQLLifecycleAndTransactions(t *testing.T) {
-	connectionString := os.Getenv("MANORECK_TEST_DATABASE_URL")
+	connectionString := os.Getenv("CREDAR_TEST_DATABASE_URL")
 	if connectionString == "" {
-		t.Skip("MANORECK_TEST_DATABASE_URL is required for PostgreSQL integration tests")
+		t.Skip("CREDAR_TEST_DATABASE_URL is required for PostgreSQL integration tests")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)

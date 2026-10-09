@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/objectstorage"
+	"github.com/lupppig/credar/backend/internal/platform/objectstorage"
 )
 
 func TestStoreRejectsInvalidConfiguration(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/logging"
+	"github.com/lupppig/credar/backend/internal/platform/logging"
 )
 
 func TestNewAppliesLevelAndRuntimeAttributes(t *testing.T) {
@@ -23,7 +23,7 @@ func TestNewAppliesLevelAndRuntimeAttributes(t *testing.T) {
 	}
 	for _, expected := range []string{
 		`"msg":"visible"`,
-		`"service":"manoreck-api"`,
+		`"service":"credar-api"`,
 		`"environment":"test"`,
 	} {
 		if !strings.Contains(entry, expected) {

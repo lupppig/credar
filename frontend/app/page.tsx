@@ -7,10 +7,9 @@ export default function Home() {
           Operational foundations, ready for product work.
         </h1>
         <p className="summary">
-          Mano Reck is one multi-tenant credit platform for businesses that
-          borrow, finance their customers, or do both. This console currently
-          exposes the runtime foundation without implying unfinished product
-          workflows.
+          Credar is one multi-tenant credit platform for businesses that borrow,
+          finance their customers, or do both. This console currently exposes
+          the runtime foundation without implying unfinished product workflows.
         </p>
       </section>
 

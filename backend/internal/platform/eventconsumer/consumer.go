@@ -14,18 +14,18 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/lupppig/mano-reck/backend/internal/platform/database"
-	"github.com/lupppig/mano-reck/backend/internal/platform/event"
-	"github.com/lupppig/mano-reck/backend/internal/platform/natsclient"
+	"github.com/lupppig/credar/backend/internal/platform/database"
+	"github.com/lupppig/credar/backend/internal/platform/event"
+	"github.com/lupppig/credar/backend/internal/platform/natsclient"
 	"github.com/nats-io/nats.go"
 )
 
 const (
 	// InfrastructureConsumer is deliberately scoped to the Phase 01 proof
 	// event and must not become a catch-all domain-event consumer.
-	InfrastructureConsumer = "manoreck-infrastructure-proof-v1"
-	InfrastructureSubject  = "manoreck.events.infrastructure.probe.v1"
-	deadLetterSubject      = "manoreck.dead.infrastructure.proof.v1"
+	InfrastructureConsumer = "credar-infrastructure-proof-v1"
+	InfrastructureSubject  = "credar.events.infrastructure.probe.v1"
+	deadLetterSubject      = "credar.dead.infrastructure.proof.v1"
 	maxDeliveries          = 5
 )
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/event"
+	"github.com/lupppig/credar/backend/internal/platform/event"
 )
 
 const (
@@ -26,7 +26,7 @@ func TestEnvelopeValidationAndSubject(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create subject: %v", err)
 	}
-	if subject != "manoreck.events.infrastructure.probe.v1" {
+	if subject != "credar.events.infrastructure.probe.v1" {
 		t.Fatalf("unexpected subject %q", subject)
 	}
 }

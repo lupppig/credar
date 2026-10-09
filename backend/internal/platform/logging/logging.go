@@ -10,7 +10,7 @@ import (
 func New(output io.Writer, level slog.Level, environment string) *slog.Logger {
 	handler := slog.NewJSONHandler(output, &slog.HandlerOptions{Level: level})
 	return slog.New(handler).With(
-		"service", "manoreck-api",
+		"service", "credar-api",
 		"environment", environment,
 	)
 }

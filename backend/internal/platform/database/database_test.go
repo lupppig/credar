@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/database"
+	"github.com/lupppig/credar/backend/internal/platform/database"
 )
 
 func TestNewRejectsInvalidPoolPolicy(t *testing.T) {

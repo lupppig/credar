@@ -13,20 +13,20 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/lupppig/mano-reck/backend/internal/platform/database"
-	"github.com/lupppig/mano-reck/backend/internal/platform/event"
-	"github.com/lupppig/mano-reck/backend/internal/platform/eventconsumer"
-	"github.com/lupppig/mano-reck/backend/internal/platform/identifier"
-	"github.com/lupppig/mano-reck/backend/internal/platform/natsclient"
-	"github.com/lupppig/mano-reck/backend/internal/platform/outbox"
+	"github.com/lupppig/credar/backend/internal/platform/database"
+	"github.com/lupppig/credar/backend/internal/platform/event"
+	"github.com/lupppig/credar/backend/internal/platform/eventconsumer"
+	"github.com/lupppig/credar/backend/internal/platform/identifier"
+	"github.com/lupppig/credar/backend/internal/platform/natsclient"
+	"github.com/lupppig/credar/backend/internal/platform/outbox"
 	"github.com/nats-io/nats.go"
 )
 
 func TestCommittedOutboxEventPublishesAndConsumesIdempotently(t *testing.T) {
-	databaseURL := os.Getenv("MANORECK_TEST_DATABASE_URL")
-	natsURL := os.Getenv("MANORECK_TEST_NATS_URL")
+	databaseURL := os.Getenv("CREDAR_TEST_DATABASE_URL")
+	natsURL := os.Getenv("CREDAR_TEST_NATS_URL")
 	if databaseURL == "" || natsURL == "" {
-		t.Skip("MANORECK_TEST_DATABASE_URL and MANORECK_TEST_NATS_URL are required")
+		t.Skip("CREDAR_TEST_DATABASE_URL and CREDAR_TEST_NATS_URL are required")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

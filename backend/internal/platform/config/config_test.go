@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/config"
+	"github.com/lupppig/credar/backend/internal/platform/config"
 )
 
 func TestLoadUsesSafeLocalDefaults(t *testing.T) {
@@ -45,10 +45,10 @@ func TestLoadUsesSafeLocalDefaults(t *testing.T) {
 	if loaded.Outbox.BatchSize != 100 || loaded.Outbox.MaxAttempts != 8 {
 		t.Fatalf("unexpected default outbox configuration: %#v", loaded.Outbox)
 	}
-	if loaded.Redis.KeyPrefix != "manoreck" || loaded.Redis.URL.Reveal() != "redis://127.0.0.1:6379/0" {
+	if loaded.Redis.KeyPrefix != "credar" || loaded.Redis.URL.Reveal() != "redis://127.0.0.1:6379/0" {
 		t.Fatalf("unexpected Redis defaults: %#v", loaded.Redis)
 	}
-	if loaded.ObjectStorage.Endpoint != "http://127.0.0.1:8333" || loaded.ObjectStorage.Bucket != "manoreck-local" {
+	if loaded.ObjectStorage.Endpoint != "http://127.0.0.1:8333" || loaded.ObjectStorage.Bucket != "credar-local" {
 		t.Fatalf("unexpected object-storage defaults: %#v", loaded.ObjectStorage)
 	}
 }
@@ -57,27 +57,27 @@ func TestLoadAcceptsExplicitConfiguration(t *testing.T) {
 	t.Parallel()
 
 	values := map[string]string{
-		"MANORECK_ENVIRONMENT":                   "sandbox",
-		"MANORECK_LOG_LEVEL":                     "debug",
-		"MANORECK_HTTP_ADDRESS":                  "127.0.0.1:9090",
-		"MANORECK_HTTP_SHUTDOWN_TIMEOUT_SECONDS": "15",
-		"MANORECK_READINESS_TIMEOUT_SECONDS":     "3",
-		"MANORECK_DATABASE_URL":                  "postgres://user:secret@database:5432/testdb?sslmode=disable",
-		"MANORECK_DATABASE_MAX_CONNECTIONS":      "20",
-		"MANORECK_DATABASE_MIN_CONNECTIONS":      "2",
-		"MANORECK_NATS_URL":                      "tls://user:secret@nats.example:4222",
-		"MANORECK_OUTBOX_POLL_MILLISECONDS":      "100",
-		"MANORECK_OUTBOX_LEASE_SECONDS":          "20",
-		"MANORECK_OUTBOX_BATCH_SIZE":             "25",
-		"MANORECK_OUTBOX_MAX_ATTEMPTS":           "6",
-		"MANORECK_OUTBOX_BASE_BACKOFF_SECONDS":   "2",
-		"MANORECK_OUTBOX_MAX_BACKOFF_SECONDS":    "120",
-		"MANORECK_REDIS_URL":                     "rediss://user:secret@redis.example:6380/2",
-		"MANORECK_REDIS_KEY_PREFIX":              "sandbox_test",
-		"MANORECK_OBJECT_STORAGE_ENDPOINT":       "https://objects.example:9443",
-		"MANORECK_OBJECT_STORAGE_BUCKET":         "sandbox-objects",
-		"MANORECK_OBJECT_STORAGE_ACCESS_KEY":     "object-access",
-		"MANORECK_OBJECT_STORAGE_SECRET_KEY":     "object-secret",
+		"CREDAR_ENVIRONMENT":                   "sandbox",
+		"CREDAR_LOG_LEVEL":                     "debug",
+		"CREDAR_HTTP_ADDRESS":                  "127.0.0.1:9090",
+		"CREDAR_HTTP_SHUTDOWN_TIMEOUT_SECONDS": "15",
+		"CREDAR_READINESS_TIMEOUT_SECONDS":     "3",
+		"CREDAR_DATABASE_URL":                  "postgres://user:secret@database:5432/testdb?sslmode=disable",
+		"CREDAR_DATABASE_MAX_CONNECTIONS":      "20",
+		"CREDAR_DATABASE_MIN_CONNECTIONS":      "2",
+		"CREDAR_NATS_URL":                      "tls://user:secret@nats.example:4222",
+		"CREDAR_OUTBOX_POLL_MILLISECONDS":      "100",
+		"CREDAR_OUTBOX_LEASE_SECONDS":          "20",
+		"CREDAR_OUTBOX_BATCH_SIZE":             "25",
+		"CREDAR_OUTBOX_MAX_ATTEMPTS":           "6",
+		"CREDAR_OUTBOX_BASE_BACKOFF_SECONDS":   "2",
+		"CREDAR_OUTBOX_MAX_BACKOFF_SECONDS":    "120",
+		"CREDAR_REDIS_URL":                     "rediss://user:secret@redis.example:6380/2",
+		"CREDAR_REDIS_KEY_PREFIX":              "sandbox_test",
+		"CREDAR_OBJECT_STORAGE_ENDPOINT":       "https://objects.example:9443",
+		"CREDAR_OBJECT_STORAGE_BUCKET":         "sandbox-objects",
+		"CREDAR_OBJECT_STORAGE_ACCESS_KEY":     "object-access",
+		"CREDAR_OBJECT_STORAGE_SECRET_KEY":     "object-secret",
 	}
 	loaded, err := config.Load(mapEnvironment(values))
 	if err != nil {
@@ -124,25 +124,25 @@ func TestLoadRejectsInvalidValuesWithVariableName(t *testing.T) {
 		variable string
 		value    string
 	}{
-		{name: "environment", variable: "MANORECK_ENVIRONMENT", value: "production"},
-		{name: "log level", variable: "MANORECK_LOG_LEVEL", value: "verbose"},
-		{name: "address", variable: "MANORECK_HTTP_ADDRESS", value: "localhost"},
-		{name: "shutdown timeout", variable: "MANORECK_HTTP_SHUTDOWN_TIMEOUT_SECONDS", value: "0"},
-		{name: "readiness timeout", variable: "MANORECK_READINESS_TIMEOUT_SECONDS", value: "many"},
-		{name: "database URL", variable: "MANORECK_DATABASE_URL", value: "mysql://database/test"},
-		{name: "database maximum", variable: "MANORECK_DATABASE_MAX_CONNECTIONS", value: "101"},
-		{name: "database minimum", variable: "MANORECK_DATABASE_MIN_CONNECTIONS", value: "11"},
-		{name: "NATS URL", variable: "MANORECK_NATS_URL", value: "http://nats.example"},
-		{name: "outbox poll", variable: "MANORECK_OUTBOX_POLL_MILLISECONDS", value: "0"},
-		{name: "outbox attempts", variable: "MANORECK_OUTBOX_MAX_ATTEMPTS", value: "101"},
-		{name: "outbox backoff", variable: "MANORECK_OUTBOX_MAX_BACKOFF_SECONDS", value: "0"},
-		{name: "Redis URL", variable: "MANORECK_REDIS_URL", value: "http://redis.example"},
-		{name: "Redis prefix", variable: "MANORECK_REDIS_KEY_PREFIX", value: "Bad Prefix"},
-		{name: "object endpoint", variable: "MANORECK_OBJECT_STORAGE_ENDPOINT", value: "ftp://objects.example"},
-		{name: "object bucket", variable: "MANORECK_OBJECT_STORAGE_BUCKET", value: "UPPERCASE"},
-		{name: "object bucket IP", variable: "MANORECK_OBJECT_STORAGE_BUCKET", value: "127.0.0.1"},
-		{name: "object access key", variable: "MANORECK_OBJECT_STORAGE_ACCESS_KEY", value: ""},
-		{name: "object secret key", variable: "MANORECK_OBJECT_STORAGE_SECRET_KEY", value: ""},
+		{name: "environment", variable: "CREDAR_ENVIRONMENT", value: "production"},
+		{name: "log level", variable: "CREDAR_LOG_LEVEL", value: "verbose"},
+		{name: "address", variable: "CREDAR_HTTP_ADDRESS", value: "localhost"},
+		{name: "shutdown timeout", variable: "CREDAR_HTTP_SHUTDOWN_TIMEOUT_SECONDS", value: "0"},
+		{name: "readiness timeout", variable: "CREDAR_READINESS_TIMEOUT_SECONDS", value: "many"},
+		{name: "database URL", variable: "CREDAR_DATABASE_URL", value: "mysql://database/test"},
+		{name: "database maximum", variable: "CREDAR_DATABASE_MAX_CONNECTIONS", value: "101"},
+		{name: "database minimum", variable: "CREDAR_DATABASE_MIN_CONNECTIONS", value: "11"},
+		{name: "NATS URL", variable: "CREDAR_NATS_URL", value: "http://nats.example"},
+		{name: "outbox poll", variable: "CREDAR_OUTBOX_POLL_MILLISECONDS", value: "0"},
+		{name: "outbox attempts", variable: "CREDAR_OUTBOX_MAX_ATTEMPTS", value: "101"},
+		{name: "outbox backoff", variable: "CREDAR_OUTBOX_MAX_BACKOFF_SECONDS", value: "0"},
+		{name: "Redis URL", variable: "CREDAR_REDIS_URL", value: "http://redis.example"},
+		{name: "Redis prefix", variable: "CREDAR_REDIS_KEY_PREFIX", value: "Bad Prefix"},
+		{name: "object endpoint", variable: "CREDAR_OBJECT_STORAGE_ENDPOINT", value: "ftp://objects.example"},
+		{name: "object bucket", variable: "CREDAR_OBJECT_STORAGE_BUCKET", value: "UPPERCASE"},
+		{name: "object bucket IP", variable: "CREDAR_OBJECT_STORAGE_BUCKET", value: "127.0.0.1"},
+		{name: "object access key", variable: "CREDAR_OBJECT_STORAGE_ACCESS_KEY", value: ""},
+		{name: "object secret key", variable: "CREDAR_OBJECT_STORAGE_SECRET_KEY", value: ""},
 	}
 
 	for _, test := range tests {

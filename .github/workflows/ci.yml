@@ -55,7 +55,7 @@ jobs:
 
       - name: Build backend
         working-directory: backend
-        run: go build -trimpath -o ../bin/manoreck-api ./cmd/api
+        run: go build -trimpath -o ../bin/credar-api ./cmd/api
 
       - name: Smoke-test backend process
         run: ./scripts/smoke-backend.sh
@@ -108,7 +108,7 @@ jobs:
 
       - name: Smoke-test frontend process
         env:
-          MANORECK_SMOKE_SKIP_BUILD: "true"
+          CREDAR_SMOKE_SKIP_BUILD: "true"
         run: ./scripts/smoke-frontend.sh
 
   contracts:
@@ -211,7 +211,7 @@ jobs:
           context: .
           file: backend/Dockerfile
           push: false
-          tags: mano-reck/backend:ci
+          tags: credar/backend:ci
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
@@ -221,7 +221,7 @@ jobs:
           context: .
           file: frontend/Dockerfile
           push: false
-          tags: mano-reck/frontend:ci
+          tags: credar/frontend:ci
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 

@@ -14,8 +14,8 @@ records event IDs transactionally and acknowledges only after commit.
   caller-owned transaction; the outbox repository never commits independently.
 - Relays claim work with `FOR UPDATE SKIP LOCKED` in short transactions. Stable
   worker IDs and expiring leases make abandoned work recoverable.
-- The runtime owns one `MANORECK_EVENTS` stream for `manoreck.events.>` and
-  `manoreck.dead.>` subjects. Event subjects encode type and schema version.
+- The runtime owns one `CREDAR_EVENTS` stream for `credar.events.>` and
+  `credar.dead.>` subjects. Event subjects encode type and schema version.
 - JetStream delivery is at least once. Consumer receipts keyed by consumer and
   event ID make database side effects idempotent before acknowledgement.
 - Dead-letter messages contain bounded diagnostics and a SHA-256 payload hash,
@@ -27,7 +27,7 @@ records event IDs transactionally and acknowledges only after commit.
   It creates `platform.outbox_events` and `platform.event_consumptions` with
   lifecycle constraints and indexes for claim and receipt paths.
 - Added the validated internal event-envelope representation and the subject
-  convention `manoreck.events.<type>.v<version>`.
+  convention `credar.events.<type>.v<version>`.
 - Added validated NATS and outbox relay configuration. Connection URLs are
   treated as secrets and redact themselves during formatting.
 - No product-domain API, tenant table, or financial table was introduced.

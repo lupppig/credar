@@ -13,9 +13,9 @@ import (
 
 const (
 	// EventsStream is the durable stream for internal and dead-letter subjects.
-	EventsStream  = "MANORECK_EVENTS"
-	eventsSubject = "manoreck.events.>"
-	deadSubject   = "manoreck.dead.>"
+	EventsStream  = "CREDAR_EVENTS"
+	eventsSubject = "credar.events.>"
+	deadSubject   = "credar.dead.>"
 )
 
 // Client manages one reconnecting NATS connection and JetStream context.
@@ -50,7 +50,7 @@ func (client *Client) Start(context.Context) error {
 
 	connection, err := nats.Connect(
 		client.url,
-		nats.Name("manoreck-api"),
+		nats.Name("credar-api"),
 		nats.Timeout(5*time.Second),
 		nats.MaxReconnects(-1),
 		nats.ReconnectWait(time.Second),

@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/redisclient"
+	"github.com/lupppig/credar/backend/internal/platform/redisclient"
 )
 
 func TestIsolatedEphemeralRoundTrip(t *testing.T) {
-	redisURL := os.Getenv("MANORECK_TEST_REDIS_URL")
-	keyPrefix := os.Getenv("MANORECK_TEST_REDIS_KEY_PREFIX")
+	redisURL := os.Getenv("CREDAR_TEST_REDIS_URL")
+	keyPrefix := os.Getenv("CREDAR_TEST_REDIS_KEY_PREFIX")
 	if redisURL == "" || keyPrefix == "" {
-		t.Skip("MANORECK_TEST_REDIS_URL and MANORECK_TEST_REDIS_KEY_PREFIX are required")
+		t.Skip("CREDAR_TEST_REDIS_URL and CREDAR_TEST_REDIS_KEY_PREFIX are required")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)

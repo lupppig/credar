@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/objectstorage"
+	"github.com/lupppig/credar/backend/internal/platform/objectstorage"
 )
 
 func TestOpaqueObjectRoundTrip(t *testing.T) {
-	endpoint := os.Getenv("MANORECK_TEST_OBJECT_STORAGE_ENDPOINT")
-	bucket := os.Getenv("MANORECK_TEST_OBJECT_STORAGE_BUCKET")
-	accessKey := os.Getenv("MANORECK_TEST_OBJECT_STORAGE_ACCESS_KEY")
-	secretKey := os.Getenv("MANORECK_TEST_OBJECT_STORAGE_SECRET_KEY")
+	endpoint := os.Getenv("CREDAR_TEST_OBJECT_STORAGE_ENDPOINT")
+	bucket := os.Getenv("CREDAR_TEST_OBJECT_STORAGE_BUCKET")
+	accessKey := os.Getenv("CREDAR_TEST_OBJECT_STORAGE_ACCESS_KEY")
+	secretKey := os.Getenv("CREDAR_TEST_OBJECT_STORAGE_SECRET_KEY")
 	if endpoint == "" || bucket == "" || accessKey == "" || secretKey == "" {
 		t.Skip("object-storage integration configuration is required")
 	}

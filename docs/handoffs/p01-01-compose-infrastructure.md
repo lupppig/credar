@@ -11,7 +11,7 @@ and reproducible empty-volume verification are in place.
 
 - One project-scoped bridge network isolates the dependency stack while keeping
   service discovery explicit.
-- PostgreSQL initializes separate `manoreck` and `kratos` databases. Kratos
+- PostgreSQL initializes separate `credar` and `kratos` databases. Kratos
   migrations run as a one-shot dependency before the server becomes eligible
   to start.
 - NATS starts with JetStream enabled and persists its store. Redis retains local

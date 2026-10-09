@@ -1,7 +1,7 @@
 {
-  "$id": "https://schemas.manoreck.local/identity.schema.json",
+  "$id": "https://schemas.credar.local/identity.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Mano Reck identity",
+  "title": "Credar identity",
   "type": "object",
   "properties": {
     "traits": {

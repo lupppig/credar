@@ -3,10 +3,10 @@ set -euo pipefail
 
 readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly smoke_url="http://127.0.0.1:13000"
-readonly log_path="$(mktemp /tmp/manoreck-frontend-smoke.XXXXXX.log)"
-readonly not_found_path="$(mktemp /tmp/manoreck-frontend-not-found.XXXXXX.html)"
+readonly log_path="$(mktemp /tmp/credar-frontend-smoke.XXXXXX.log)"
+readonly not_found_path="$(mktemp /tmp/credar-frontend-not-found.XXXXXX.html)"
 
-if [[ "${MANORECK_SMOKE_SKIP_BUILD:-false}" != "true" ]]; then
+if [[ "${CREDAR_SMOKE_SKIP_BUILD:-false}" != "true" ]]; then
   (
     cd "${repository_root}"
     pnpm --dir frontend build

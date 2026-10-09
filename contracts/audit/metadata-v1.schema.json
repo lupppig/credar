@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:manoreck:schema:audit:metadata:v1",
-  "title": "Mano Reck audit metadata v1",
+  "$id": "urn:credar:schema:audit:metadata:v1",
+  "title": "Credar audit metadata v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["actor", "tenant_id", "request_id", "correlation_id", "source"],

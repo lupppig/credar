@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/redisclient"
+	"github.com/lupppig/credar/backend/internal/platform/redisclient"
 )
 
 func TestClientRejectsInvalidConfiguration(t *testing.T) {

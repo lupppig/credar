@@ -3,32 +3,32 @@ set -euo pipefail
 
 readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly compose_file="${repository_root}/deploy/compose.yaml"
-readonly project_name="manoreck-full-stack-test-$$"
+readonly project_name="credar-full-stack-test-$$"
 readonly event_id="019b1234-0000-7000-8000-000000000001"
 readonly aggregate_id="019b1234-0000-7000-8000-000000000002"
 readonly correlation_id="019b1234-0000-7000-8000-000000000003"
 readonly causation_id="019b1234-0000-7000-8000-000000000004"
 readonly request_id="019b1234-0000-7000-8000-000000000005"
-readonly backend_headers="$(mktemp /tmp/manoreck-full-stack-headers.XXXXXX)"
-readonly backend_logs="$(mktemp /tmp/manoreck-full-stack-logs.XXXXXX)"
+readonly backend_headers="$(mktemp /tmp/credar-full-stack-headers.XXXXXX)"
+readonly backend_logs="$(mktemp /tmp/credar-full-stack-logs.XXXXXX)"
 
-export MANORECK_POSTGRES_HOST_PORT=0
-export MANORECK_NATS_HOST_PORT=0
-export MANORECK_NATS_MONITOR_HOST_PORT=0
-export MANORECK_REDIS_HOST_PORT=0
-export MANORECK_SEAWEEDFS_HOST_PORT=0
-export MANORECK_KRATOS_PUBLIC_HOST_PORT=0
-export MANORECK_KRATOS_ADMIN_HOST_PORT=0
-export MANORECK_BACKEND_HOST_PORT=0
-export MANORECK_FRONTEND_HOST_PORT=0
-export MANORECK_DATABASE_URL="postgres://manoreck:manoreck_local@postgres:5432/manoreck?sslmode=disable"
-export MANORECK_NATS_URL="nats://nats:4222"
-export MANORECK_REDIS_URL="redis://redis:6379/0"
-export MANORECK_REDIS_KEY_PREFIX="manoreck_full_stack_$$"
-export MANORECK_OBJECT_STORAGE_ENDPOINT="http://seaweedfs:8333"
-export MANORECK_OBJECT_STORAGE_BUCKET="manoreck-full-stack-$$"
-export MANORECK_OBJECT_STORAGE_ACCESS_KEY="local-access-key"
-export MANORECK_OBJECT_STORAGE_SECRET_KEY="local-secret-key"
+export CREDAR_POSTGRES_HOST_PORT=0
+export CREDAR_NATS_HOST_PORT=0
+export CREDAR_NATS_MONITOR_HOST_PORT=0
+export CREDAR_REDIS_HOST_PORT=0
+export CREDAR_SEAWEEDFS_HOST_PORT=0
+export CREDAR_KRATOS_PUBLIC_HOST_PORT=0
+export CREDAR_KRATOS_ADMIN_HOST_PORT=0
+export CREDAR_BACKEND_HOST_PORT=0
+export CREDAR_FRONTEND_HOST_PORT=0
+export CREDAR_DATABASE_URL="postgres://credar:credar_local@postgres:5432/credar?sslmode=disable"
+export CREDAR_NATS_URL="nats://nats:4222"
+export CREDAR_REDIS_URL="redis://redis:6379/0"
+export CREDAR_REDIS_KEY_PREFIX="credar_full_stack_$$"
+export CREDAR_OBJECT_STORAGE_ENDPOINT="http://seaweedfs:8333"
+export CREDAR_OBJECT_STORAGE_BUCKET="credar-full-stack-$$"
+export CREDAR_OBJECT_STORAGE_ACCESS_KEY="local-access-key"
+export CREDAR_OBJECT_STORAGE_SECRET_KEY="local-secret-key"
 
 compose() {
   docker compose --project-name "${project_name}" --file "${compose_file}" "$@"
@@ -53,7 +53,7 @@ compose down --volumes --remove-orphans >/dev/null 2>&1 || true
 compose up --detach --build --wait --wait-timeout 240 postgres nats redis seaweedfs kratos backend
 
 readonly backend_url="http://$(compose port backend 8080)"
-export NEXT_PUBLIC_MANORECK_API_BASE_URL="${backend_url}"
+export NEXT_PUBLIC_CREDAR_API_BASE_URL="${backend_url}"
 compose build frontend
 compose up --detach --no-build --wait --wait-timeout 240 frontend
 readonly frontend_url="http://$(compose port frontend 3000)"
@@ -82,8 +82,8 @@ frontend_response="$(curl --fail --silent --show-error "${frontend_url}/")"
 }
 
 compose exec -T postgres psql \
-  --username manoreck \
-  --dbname manoreck \
+  --username credar \
+  --dbname credar \
   --set ON_ERROR_STOP=1 \
   --command "
     BEGIN;
@@ -93,7 +93,7 @@ compose exec -T postgres psql \
     ) VALUES (
       '${event_id}', NULL, 'infrastructure.probe', 1,
       'infrastructure_probe', '${aggregate_id}',
-      'manoreck.events.infrastructure.probe.v1', now(),
+      'credar.events.infrastructure.probe.v1', now(),
       '${correlation_id}', '${causation_id}',
       jsonb_build_object(
         'id', '${event_id}',
@@ -116,15 +116,15 @@ compose exec -T postgres psql \
 proof_state=""
 for _ in {1..60}; do
   proof_state="$(compose exec -T postgres psql \
-    --username manoreck \
-    --dbname manoreck \
+    --username credar \
+    --dbname credar \
     --tuples-only \
     --no-align \
     --command "
       SELECT event.status || ':' || event.attempt_count || ':' || (
         SELECT COUNT(*)
         FROM platform.event_consumptions AS consumption
-        WHERE consumption.consumer_name = 'manoreck-infrastructure-proof-v1'
+        WHERE consumption.consumer_name = 'credar-infrastructure-proof-v1'
           AND consumption.event_id = event.id
       )
       FROM platform.outbox_events AS event

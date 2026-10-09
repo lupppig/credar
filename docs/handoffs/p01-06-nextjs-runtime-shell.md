@@ -27,8 +27,8 @@ normalization.
 
 - Added no HTTP endpoint, event schema, database migration, authentication
   assumption, tenant context, permission, or product route.
-- Added validated handling for `NEXT_PUBLIC_MANORECK_API_BASE_URL` and
-  `MANORECK_BACKEND_INTERNAL_URL`; their existing names and local defaults are
+- Added validated handling for `NEXT_PUBLIC_CREDAR_API_BASE_URL` and
+  `CREDAR_BACKEND_INTERNAL_URL`; their existing names and local defaults are
   unchanged.
 - The backend client consumes the existing `X-Correlation-ID`, `X-Request-ID`,
   JSON, and `application/problem+json` conventions.

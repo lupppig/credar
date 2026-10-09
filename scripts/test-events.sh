@@ -3,15 +3,15 @@ set -euo pipefail
 
 readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly compose_file="${repository_root}/deploy/compose.yaml"
-readonly project_name="manoreck-events-test-$$"
+readonly project_name="credar-events-test-$$"
 readonly port_offset=$((40000 + ($$ % 10000)))
 readonly postgres_port=$((port_offset + 1))
 readonly nats_port=$((port_offset + 2))
 
-export MANORECK_POSTGRES_HOST_PORT="${postgres_port}"
-export MANORECK_NATS_HOST_PORT="${nats_port}"
-export MANORECK_NATS_MONITOR_HOST_PORT=$((port_offset + 3))
-export MANORECK_DATABASE_URL="postgres://manoreck:manoreck_local@postgres:5432/manoreck?sslmode=disable"
+export CREDAR_POSTGRES_HOST_PORT="${postgres_port}"
+export CREDAR_NATS_HOST_PORT="${nats_port}"
+export CREDAR_NATS_MONITOR_HOST_PORT=$((port_offset + 3))
+export CREDAR_DATABASE_URL="postgres://credar:credar_local@postgres:5432/credar?sslmode=disable"
 
 compose() {
   docker compose --project-name "${project_name}" --file "${compose_file}" "$@"
@@ -37,8 +37,8 @@ compose run --rm migrate up
 (
   cd "${repository_root}/backend"
   CGO_ENABLED=0 \
-    MANORECK_TEST_DATABASE_URL="postgres://manoreck:manoreck_local@127.0.0.1:${postgres_port}/manoreck?sslmode=disable" \
-    MANORECK_TEST_NATS_URL="nats://127.0.0.1:${nats_port}" \
+    CREDAR_TEST_DATABASE_URL="postgres://credar:credar_local@127.0.0.1:${postgres_port}/credar?sslmode=disable" \
+    CREDAR_TEST_NATS_URL="nats://127.0.0.1:${nats_port}" \
     go test -tags=integration ./internal/platform/outbox
 )
 

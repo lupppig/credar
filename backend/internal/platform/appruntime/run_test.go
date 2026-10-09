@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/appruntime"
+	"github.com/lupppig/credar/backend/internal/platform/appruntime"
 )
 
 func TestRunStartsAndClosesDependenciesOnCancellation(t *testing.T) {

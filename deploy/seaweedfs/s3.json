@@ -1,7 +1,7 @@
 {
   "identities": [
     {
-      "name": "manoreck-local",
+      "name": "credar-local",
       "credentials": [
         {
           "accessKey": "local-access-key",

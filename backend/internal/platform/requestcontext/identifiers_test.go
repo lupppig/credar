@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/requestcontext"
+	"github.com/lupppig/credar/backend/internal/platform/requestcontext"
 )
 
 func TestIdentifiersRoundTrip(t *testing.T) {

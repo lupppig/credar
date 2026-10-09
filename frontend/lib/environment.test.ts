@@ -13,12 +13,12 @@ describe("frontend environment", () => {
   it("normalizes validated explicit URLs", () => {
     expect(
       loadPublicEnvironment({
-        NEXT_PUBLIC_MANORECK_API_BASE_URL: "https://api.example.test/",
+        NEXT_PUBLIC_CREDAR_API_BASE_URL: "https://api.example.test/",
       }).apiBaseUrl,
     ).toBe("https://api.example.test");
     expect(
       loadServerEnvironment({
-        MANORECK_BACKEND_INTERNAL_URL: "http://backend:8080",
+        CREDAR_BACKEND_INTERNAL_URL: "http://backend:8080",
       }).backendInternalUrl,
     ).toBe("http://backend:8080");
   });
@@ -30,7 +30,7 @@ describe("frontend environment", () => {
     ["unexpected path", "https://api.example.test/v1"],
   ])("rejects %s", (_description, value) => {
     expect(() =>
-      loadServerEnvironment({ MANORECK_BACKEND_INTERNAL_URL: value }),
-    ).toThrow("MANORECK_BACKEND_INTERNAL_URL");
+      loadServerEnvironment({ CREDAR_BACKEND_INTERNAL_URL: value }),
+    ).toThrow("CREDAR_BACKEND_INTERNAL_URL");
   });
 });

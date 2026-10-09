@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/identifier"
+	"github.com/lupppig/credar/backend/internal/platform/identifier"
 )
 
 // RelayRepository is the persistence surface consumed by the relay worker.

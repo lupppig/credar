@@ -13,14 +13,14 @@ const localBackendInternalUrl = "http://127.0.0.1:8080";
 
 export function loadPublicEnvironment(
   source: EnvironmentSource = {
-    NEXT_PUBLIC_MANORECK_API_BASE_URL:
-      process.env.NEXT_PUBLIC_MANORECK_API_BASE_URL,
+    NEXT_PUBLIC_CREDAR_API_BASE_URL:
+      process.env.NEXT_PUBLIC_CREDAR_API_BASE_URL,
   },
 ): PublicEnvironment {
   return {
     apiBaseUrl: absoluteHttpUrl(
-      "NEXT_PUBLIC_MANORECK_API_BASE_URL",
-      source.NEXT_PUBLIC_MANORECK_API_BASE_URL ?? localPublicApiBaseUrl,
+      "NEXT_PUBLIC_CREDAR_API_BASE_URL",
+      source.NEXT_PUBLIC_CREDAR_API_BASE_URL ?? localPublicApiBaseUrl,
     ),
   };
 }
@@ -30,8 +30,8 @@ export function loadServerEnvironment(
 ): ServerEnvironment {
   return {
     backendInternalUrl: absoluteHttpUrl(
-      "MANORECK_BACKEND_INTERNAL_URL",
-      source.MANORECK_BACKEND_INTERNAL_URL ?? localBackendInternalUrl,
+      "CREDAR_BACKEND_INTERNAL_URL",
+      source.CREDAR_BACKEND_INTERNAL_URL ?? localBackendInternalUrl,
     ),
   };
 }

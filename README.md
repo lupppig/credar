@@ -1,6 +1,6 @@
-# Mano Reck
+# Credar
 
-Mano Reck is the implementation of a multi-tenant B2B credit infrastructure
+Credar is the implementation of a multi-tenant B2B credit infrastructure
 platform. Businesses can borrow, provide financing to their customers, or do
 both. BNPL is one financing product built on the platform rather than the
 platform's entire domain model.

@@ -15,7 +15,7 @@ for each artifact and reproducible toolchains.
 Use a monorepo with these top-level ownership boundaries:
 
 - `backend/` contains one Go module at
-  `github.com/lupppig/mano-reck/backend`. It builds the modular-monolith API and
+  `github.com/lupppig/credar/backend`. It builds the modular-monolith API and
   its background-worker entry points.
 - `frontend/` contains one Next.js application using the App Router and strict
   TypeScript.

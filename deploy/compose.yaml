@@ -1,20 +1,20 @@
-name: mano-reck
+name: credar
 
 services:
   postgres:
     image: postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
     environment:
-      POSTGRES_DB: manoreck
-      POSTGRES_USER: manoreck
-      POSTGRES_PASSWORD: manoreck_local
+      POSTGRES_DB: credar
+      POSTGRES_USER: credar
+      POSTGRES_PASSWORD: credar_local
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
     ports:
-      - "127.0.0.1:${MANORECK_POSTGRES_HOST_PORT:-5432}:5432"
+      - "127.0.0.1:${CREDAR_POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U manoreck -d manoreck"]
+      test: ["CMD-SHELL", "pg_isready -U credar -d credar"]
       interval: 2s
       timeout: 5s
       retries: 20
@@ -27,7 +27,7 @@ services:
     entrypoint:
       - /usr/local/bin/migrate
       - -path=/migrations
-      - -database=${MANORECK_DATABASE_URL:-postgres://manoreck:manoreck_local@postgres:5432/manoreck?sslmode=disable}
+      - -database=${CREDAR_DATABASE_URL:-postgres://credar:credar_local@postgres:5432/credar?sslmode=disable}
     command: ["up"]
     volumes:
       - ../backend/migrations:/migrations:ro
@@ -43,10 +43,10 @@ services:
       - --jetstream
       - --store_dir=/data
       - --http_port=8222
-      - --server_name=manoreck-local
+      - --server_name=credar-local
     ports:
-      - "127.0.0.1:${MANORECK_NATS_HOST_PORT:-4222}:4222"
-      - "127.0.0.1:${MANORECK_NATS_MONITOR_HOST_PORT:-8222}:8222"
+      - "127.0.0.1:${CREDAR_NATS_HOST_PORT:-4222}:4222"
+      - "127.0.0.1:${CREDAR_NATS_MONITOR_HOST_PORT:-8222}:8222"
     volumes:
       - nats-data:/data
     healthcheck:
@@ -71,7 +71,7 @@ services:
       - --appendfsync
       - everysec
     ports:
-      - "127.0.0.1:${MANORECK_REDIS_HOST_PORT:-6379}:6379"
+      - "127.0.0.1:${CREDAR_REDIS_HOST_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -97,7 +97,7 @@ services:
       - -volume.max=0
       - -master.volumeSizeLimitMB=1024
     ports:
-      - "127.0.0.1:${MANORECK_SEAWEEDFS_HOST_PORT:-8333}:8333"
+      - "127.0.0.1:${CREDAR_SEAWEEDFS_HOST_PORT:-8333}:8333"
     volumes:
       - seaweedfs-data:/data
       - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
@@ -117,7 +117,7 @@ services:
   kratos-migrate:
     image: oryd/kratos:v26.2.0@sha256:2a13bb8d362c7a7ae33bd7c0f5168aee46921f15c916a06346db91c06dc76643
     environment:
-      DSN: postgres://manoreck:manoreck_local@postgres:5432/kratos?sslmode=disable&max_conns=10&max_idle_conns=2
+      DSN: postgres://credar:credar_local@postgres:5432/kratos?sslmode=disable&max_conns=10&max_idle_conns=2
     command: -c /etc/config/kratos/kratos.yaml migrate sql -e --yes
     volumes:
       - ./kratos:/etc/config/kratos:ro
@@ -130,11 +130,11 @@ services:
   kratos:
     image: oryd/kratos:v26.2.0@sha256:2a13bb8d362c7a7ae33bd7c0f5168aee46921f15c916a06346db91c06dc76643
     environment:
-      DSN: postgres://manoreck:manoreck_local@postgres:5432/kratos?sslmode=disable&max_conns=10&max_idle_conns=2
+      DSN: postgres://credar:credar_local@postgres:5432/kratos?sslmode=disable&max_conns=10&max_idle_conns=2
     command: serve -c /etc/config/kratos/kratos.yaml --dev
     ports:
-      - "127.0.0.1:${MANORECK_KRATOS_PUBLIC_HOST_PORT:-4433}:4433"
-      - "127.0.0.1:${MANORECK_KRATOS_ADMIN_HOST_PORT:-4434}:4434"
+      - "127.0.0.1:${CREDAR_KRATOS_PUBLIC_HOST_PORT:-4433}:4433"
+      - "127.0.0.1:${CREDAR_KRATOS_ADMIN_HOST_PORT:-4434}:4434"
     volumes:
       - ./kratos:/etc/config/kratos:ro
     depends_on:
@@ -156,29 +156,29 @@ services:
       context: ..
       dockerfile: backend/Dockerfile
     environment:
-      MANORECK_ENVIRONMENT: ${MANORECK_ENVIRONMENT:-local}
-      MANORECK_LOG_LEVEL: ${MANORECK_LOG_LEVEL:-info}
-      MANORECK_HTTP_ADDRESS: :8080
-      MANORECK_HTTP_SHUTDOWN_TIMEOUT_SECONDS: ${MANORECK_HTTP_SHUTDOWN_TIMEOUT_SECONDS:-10}
-      MANORECK_READINESS_TIMEOUT_SECONDS: ${MANORECK_READINESS_TIMEOUT_SECONDS:-2}
-      MANORECK_DATABASE_URL: ${MANORECK_DATABASE_URL:-postgres://manoreck:manoreck_local@postgres:5432/manoreck?sslmode=disable}
-      MANORECK_DATABASE_MAX_CONNECTIONS: ${MANORECK_DATABASE_MAX_CONNECTIONS:-10}
-      MANORECK_DATABASE_MIN_CONNECTIONS: ${MANORECK_DATABASE_MIN_CONNECTIONS:-1}
-      MANORECK_NATS_URL: ${MANORECK_NATS_URL:-nats://nats:4222}
-      MANORECK_OUTBOX_POLL_MILLISECONDS: ${MANORECK_OUTBOX_POLL_MILLISECONDS:-250}
-      MANORECK_OUTBOX_LEASE_SECONDS: ${MANORECK_OUTBOX_LEASE_SECONDS:-30}
-      MANORECK_OUTBOX_BATCH_SIZE: ${MANORECK_OUTBOX_BATCH_SIZE:-100}
-      MANORECK_OUTBOX_MAX_ATTEMPTS: ${MANORECK_OUTBOX_MAX_ATTEMPTS:-8}
-      MANORECK_OUTBOX_BASE_BACKOFF_SECONDS: ${MANORECK_OUTBOX_BASE_BACKOFF_SECONDS:-1}
-      MANORECK_OUTBOX_MAX_BACKOFF_SECONDS: ${MANORECK_OUTBOX_MAX_BACKOFF_SECONDS:-300}
-      MANORECK_REDIS_URL: ${MANORECK_REDIS_URL:-redis://redis:6379/0}
-      MANORECK_REDIS_KEY_PREFIX: ${MANORECK_REDIS_KEY_PREFIX:-manoreck}
-      MANORECK_OBJECT_STORAGE_ENDPOINT: ${MANORECK_OBJECT_STORAGE_ENDPOINT:-http://seaweedfs:8333}
-      MANORECK_OBJECT_STORAGE_BUCKET: ${MANORECK_OBJECT_STORAGE_BUCKET:-manoreck-local}
-      MANORECK_OBJECT_STORAGE_ACCESS_KEY: ${MANORECK_OBJECT_STORAGE_ACCESS_KEY:-local-access-key}
-      MANORECK_OBJECT_STORAGE_SECRET_KEY: ${MANORECK_OBJECT_STORAGE_SECRET_KEY:-local-secret-key}
+      CREDAR_ENVIRONMENT: ${CREDAR_ENVIRONMENT:-local}
+      CREDAR_LOG_LEVEL: ${CREDAR_LOG_LEVEL:-info}
+      CREDAR_HTTP_ADDRESS: :8080
+      CREDAR_HTTP_SHUTDOWN_TIMEOUT_SECONDS: ${CREDAR_HTTP_SHUTDOWN_TIMEOUT_SECONDS:-10}
+      CREDAR_READINESS_TIMEOUT_SECONDS: ${CREDAR_READINESS_TIMEOUT_SECONDS:-2}
+      CREDAR_DATABASE_URL: ${CREDAR_DATABASE_URL:-postgres://credar:credar_local@postgres:5432/credar?sslmode=disable}
+      CREDAR_DATABASE_MAX_CONNECTIONS: ${CREDAR_DATABASE_MAX_CONNECTIONS:-10}
+      CREDAR_DATABASE_MIN_CONNECTIONS: ${CREDAR_DATABASE_MIN_CONNECTIONS:-1}
+      CREDAR_NATS_URL: ${CREDAR_NATS_URL:-nats://nats:4222}
+      CREDAR_OUTBOX_POLL_MILLISECONDS: ${CREDAR_OUTBOX_POLL_MILLISECONDS:-250}
+      CREDAR_OUTBOX_LEASE_SECONDS: ${CREDAR_OUTBOX_LEASE_SECONDS:-30}
+      CREDAR_OUTBOX_BATCH_SIZE: ${CREDAR_OUTBOX_BATCH_SIZE:-100}
+      CREDAR_OUTBOX_MAX_ATTEMPTS: ${CREDAR_OUTBOX_MAX_ATTEMPTS:-8}
+      CREDAR_OUTBOX_BASE_BACKOFF_SECONDS: ${CREDAR_OUTBOX_BASE_BACKOFF_SECONDS:-1}
+      CREDAR_OUTBOX_MAX_BACKOFF_SECONDS: ${CREDAR_OUTBOX_MAX_BACKOFF_SECONDS:-300}
+      CREDAR_REDIS_URL: ${CREDAR_REDIS_URL:-redis://redis:6379/0}
+      CREDAR_REDIS_KEY_PREFIX: ${CREDAR_REDIS_KEY_PREFIX:-credar}
+      CREDAR_OBJECT_STORAGE_ENDPOINT: ${CREDAR_OBJECT_STORAGE_ENDPOINT:-http://seaweedfs:8333}
+      CREDAR_OBJECT_STORAGE_BUCKET: ${CREDAR_OBJECT_STORAGE_BUCKET:-credar-local}
+      CREDAR_OBJECT_STORAGE_ACCESS_KEY: ${CREDAR_OBJECT_STORAGE_ACCESS_KEY:-local-access-key}
+      CREDAR_OBJECT_STORAGE_SECRET_KEY: ${CREDAR_OBJECT_STORAGE_SECRET_KEY:-local-secret-key}
     ports:
-      - "127.0.0.1:${MANORECK_BACKEND_HOST_PORT:-8080}:8080"
+      - "127.0.0.1:${CREDAR_BACKEND_HOST_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -191,7 +191,7 @@ services:
       seaweedfs:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "/manoreck-api", "healthcheck"]
+      test: ["CMD", "/credar-api", "healthcheck"]
       interval: 3s
       timeout: 5s
       retries: 30
@@ -204,11 +204,11 @@ services:
       context: ..
       dockerfile: frontend/Dockerfile
       args:
-        NEXT_PUBLIC_MANORECK_API_BASE_URL: ${NEXT_PUBLIC_MANORECK_API_BASE_URL:-http://localhost:8080}
+        NEXT_PUBLIC_CREDAR_API_BASE_URL: ${NEXT_PUBLIC_CREDAR_API_BASE_URL:-http://localhost:8080}
     environment:
-      MANORECK_BACKEND_INTERNAL_URL: http://backend:8080
+      CREDAR_BACKEND_INTERNAL_URL: http://backend:8080
     ports:
-      - "127.0.0.1:${MANORECK_FRONTEND_HOST_PORT:-3000}:3000"
+      - "127.0.0.1:${CREDAR_FRONTEND_HOST_PORT:-3000}:3000"
     depends_on:
       backend:
         condition: service_healthy

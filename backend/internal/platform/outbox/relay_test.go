@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lupppig/mano-reck/backend/internal/platform/event"
-	"github.com/lupppig/mano-reck/backend/internal/platform/outbox"
+	"github.com/lupppig/credar/backend/internal/platform/event"
+	"github.com/lupppig/credar/backend/internal/platform/outbox"
 )
 
 func TestRelayPublishesAndMarksCommittedEvent(t *testing.T) {
@@ -20,7 +20,7 @@ func TestRelayPublishesAndMarksCommittedEvent(t *testing.T) {
 	repository := &fakeRelayRepository{
 		records: []outbox.Record{{
 			Envelope: relayEnvelope(),
-			Subject:  "manoreck.events.infrastructure.probe.v1",
+			Subject:  "credar.events.infrastructure.probe.v1",
 			Attempt:  1,
 		}},
 		publishedSignal: make(chan struct{}, 1),
@@ -55,7 +55,7 @@ func TestRelaySchedulesTransientPublishFailure(t *testing.T) {
 	repository := &fakeRelayRepository{
 		records: []outbox.Record{{
 			Envelope: relayEnvelope(),
-			Subject:  "manoreck.events.infrastructure.probe.v1",
+			Subject:  "credar.events.infrastructure.probe.v1",
 			Attempt:  2,
 		}},
 		publishedSignal: make(chan struct{}, 1),
