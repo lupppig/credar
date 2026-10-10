@@ -5,3 +5,7 @@ packages:
 # lifecycle scripts are denied unless they are explicitly reviewed here.
 allowBuilds:
   unrs-resolver: true
+
+overrides:
+  sharp: 0.35.5
+  source-map-js: 1.2.2

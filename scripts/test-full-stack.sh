@@ -34,6 +34,24 @@ compose() {
   docker compose --project-name "${project_name}" --file "${compose_file}" "$@"
 }
 
+wait_for_response() {
+  local url="$1"
+  local expected="$2"
+  local response=""
+
+  for _ in {1..100}; do
+    if response="$(curl --fail --silent --show-error "${url}" 2>/dev/null)" &&
+      [[ "${response}" == *"${expected}"* ]]; then
+      printf '%s' "${response}"
+      return 0
+    fi
+    sleep 0.1
+  done
+
+  echo "Timed out waiting for ${url}." >&2
+  return 1
+}
+
 cleanup() {
   local exit_status=$?
   if ((exit_status != 0)); then
@@ -61,7 +79,7 @@ compose build frontend
 compose up --detach --no-build --wait --wait-timeout 240 frontend
 readonly frontend_url="http://$(compose port frontend 3000)"
 
-health_response="$(curl --fail --silent --show-error "${backend_url}/healthz")"
+health_response="$(wait_for_response "${backend_url}/healthz" '{"status":"ok"}')"
 [[ "${health_response}" == '{"status":"ok"}' ]] || {
   echo "Backend liveness returned an unexpected response: ${health_response}" >&2
   exit 1
@@ -78,7 +96,7 @@ curl \
 grep -qi "^X-Request-ID: ${request_id}" "${backend_headers}"
 grep -qi "^X-Correlation-ID: ${correlation_id}" "${backend_headers}"
 
-frontend_response="$(curl --fail --silent --show-error "${frontend_url}/")"
+frontend_response="$(wait_for_response "${frontend_url}/" 'Operational foundations, ready for product work.')"
 [[ "${frontend_response}" == *"Operational foundations, ready for product work."* ]] || {
   echo "Frontend did not serve the built enterprise shell." >&2
   exit 1
