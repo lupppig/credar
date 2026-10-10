@@ -31,6 +31,18 @@ selfservice:
       ui_url: http://localhost:3000/auth/login
     registration:
       ui_url: http://localhost:3000/auth/registration
+      after:
+        password:
+          hooks:
+            - hook: session
+    recovery:
+      enabled: true
+      ui_url: http://localhost:3000/auth/recovery
+      use: code
+    verification:
+      enabled: true
+      ui_url: http://localhost:3000/auth/verification
+      use: code
 
 log:
   level: info

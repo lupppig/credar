@@ -1,14 +1,40 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BrandLogo } from "./brand-logo";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Credar Console",
+    default: "Credar | Credit and Payment Infrastructure for Businesses",
     template: "%s · Credar",
   },
-  description: "Enterprise operations for multi-tenant credit infrastructure",
+  description:
+    "Launch and operate embedded credit, BNPL, merchant financing, payments, and repayment products on one enterprise platform.",
+  keywords: [
+    "credit infrastructure",
+    "payment infrastructure",
+    "embedded credit",
+    "BNPL platform",
+    "lending infrastructure",
+    "repayment collection",
+    "merchant financing",
+    "B2B credit platform",
+  ],
+  openGraph: {
+    title: "Credar: Credit moves possibility forward",
+    description:
+      "Enterprise infrastructure for building credit and payment products that move businesses forward.",
+    type: "website",
+    siteName: "Credar",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Credar: Credit moves possibility forward",
+    description:
+      "Enterprise credit and payment infrastructure for modern businesses.",
+  },
 };
 
 export default function RootLayout({
@@ -22,25 +48,29 @@ export default function RootLayout({
         </a>
         <div className="app-frame">
           <header className="app-header">
-            <div className="brand" aria-label="Credar">
-              <span className="brand-mark" aria-hidden="true">
-                CR
-              </span>
+            <Link className="brand" href="/" aria-label="Credar home">
+              <BrandLogo />
               <span>
                 <strong>Credar</strong>
-                <small>Enterprise console</small>
+                <small>Credit moves forward</small>
               </span>
-            </div>
-            <p className="environment-label">
-              <span aria-hidden="true" /> Identity control plane
-            </p>
+            </Link>
+            <nav className="site-nav" aria-label="Primary navigation">
+              <Link href="/#products">Products</Link>
+              <Link href="/#use-cases">Use cases</Link>
+              <Link href="/#why-credar">Why Credar</Link>
+              <a href="/auth/login">Sign in</a>
+              <Link className="nav-action" href="/console">
+                Open console
+              </Link>
+            </nav>
           </header>
           <main id="main-content" className="app-content">
             {children}
           </main>
           <footer className="app-footer">
-            <span>Credit infrastructure</span>
-            <span>Tenant-scoped access · server-authorized</span>
+            <span>Credar · Credit moves possibility forward.</span>
+            <span>Credit · Payments · Enterprise operations</span>
           </footer>
         </div>
       </body>

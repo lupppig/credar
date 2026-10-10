@@ -31,9 +31,6 @@ type AuditEvent = {
 };
 type Problem = { code?: string; detail?: string };
 
-const kratosBrowser =
-  process.env.NEXT_PUBLIC_CREDAR_KRATOS_BROWSER_URL ?? "http://localhost:4433";
-
 export function IdentityConsole({
   initialSession = null,
   initialMembers = [],
@@ -175,23 +172,31 @@ export function IdentityConsole({
         }
       >
         <div className="action-row">
-          <a
-            className="primary-action"
-            href={`${kratosBrowser}/self-service/login/browser`}
-          >
+          <a className="primary-action" href="/auth/login">
             Sign in
           </a>
-          <a
-            className="secondary-action"
-            href={`${kratosBrowser}/self-service/recovery/browser`}
-          >
+          <a className="secondary-action" href="/auth/recovery">
             Recover access
           </a>
-          <a
-            className="secondary-action"
-            href={`${kratosBrowser}/self-service/verification/browser`}
-          >
+          <a className="secondary-action" href="/auth/verification">
             Verify email
+          </a>
+        </div>
+      </ConsoleState>
+    );
+  }
+  if (session.memberships.length === 0) {
+    return (
+      <ConsoleState
+        title="Your identity is ready."
+        detail="You are signed in, but no workspace has been assigned yet. A platform administrator must add you to a tenant before tenant-scoped tools become available."
+      >
+        <div className="action-row">
+          <a className="primary-action" href="/auth/settings">
+            Account settings
+          </a>
+          <a className="secondary-action" href="/auth/logout">
+            Sign out
           </a>
         </div>
       </ConsoleState>
@@ -225,6 +230,10 @@ export function IdentityConsole({
           <span>
             {activeMembership?.role_names.join(" · ") || "No assigned role"}
           </span>
+          <div className="identity-links">
+            <a href="/auth/settings">Account settings</a>
+            <a href="/auth/logout">Sign out</a>
+          </div>
         </div>
       </aside>
       <div className="console-content">
