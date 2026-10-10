@@ -211,6 +211,7 @@ services:
       dockerfile: frontend/Dockerfile
       args:
         NEXT_PUBLIC_CREDAR_API_BASE_URL: ${NEXT_PUBLIC_CREDAR_API_BASE_URL:-http://localhost:8080}
+        NEXT_PUBLIC_CREDAR_KRATOS_BROWSER_URL: ${NEXT_PUBLIC_CREDAR_KRATOS_BROWSER_URL:-http://localhost:4433}
     environment:
       CREDAR_BACKEND_INTERNAL_URL: http://backend:8080
     ports:

@@ -159,6 +159,50 @@ func (client *Client) ValidateSession(
 	return identity.ExternalIdentity{ID: strings.ToLower(session.Identity.ID), Email: email}, nil
 }
 
+// LookupIdentity resolves one identity through the Kratos admin API for
+// explicit operator-controlled bootstrap flows.
+func (client *Client) LookupIdentity(ctx context.Context, identityID string) (identity.ExternalIdentity, error) {
+	if _, err := uuid.Parse(identityID); err != nil {
+		return identity.ExternalIdentity{}, fmt.Errorf("invalid Kratos identity ID")
+	}
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint(client.adminURL, "admin/identities/"+identityID), nil)
+	if err != nil {
+		return identity.ExternalIdentity{}, fmt.Errorf("create Kratos identity request: %w", err)
+	}
+	request.Header.Set("Accept", "application/json")
+	response, err := client.http.Do(request)
+	if err != nil {
+		return identity.ExternalIdentity{}, errors.Join(identity.ErrAuthenticationUnavailable, err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode == http.StatusNotFound {
+		_, _ = io.Copy(io.Discard, io.LimitReader(response.Body, maxResponseBytes))
+		return identity.ExternalIdentity{}, identity.ErrInvalidSession
+	}
+	if response.StatusCode != http.StatusOK {
+		_, _ = io.Copy(io.Discard, io.LimitReader(response.Body, maxResponseBytes))
+		return identity.ExternalIdentity{}, fmt.Errorf("%w: Kratos returned status %d", identity.ErrAuthenticationUnavailable, response.StatusCode)
+	}
+	var payload struct {
+		ID     string `json:"id"`
+		State  string `json:"state"`
+		Traits struct {
+			Email string `json:"email"`
+		} `json:"traits"`
+	}
+	if err := json.NewDecoder(io.LimitReader(response.Body, maxResponseBytes)).Decode(&payload); err != nil {
+		return identity.ExternalIdentity{}, errors.Join(identity.ErrAuthenticationUnavailable, err)
+	}
+	if payload.State != "" && payload.State != "active" {
+		return identity.ExternalIdentity{}, identity.ErrInvalidSession
+	}
+	email, err := normalizeEmail(payload.Traits.Email)
+	if err != nil {
+		return identity.ExternalIdentity{}, errors.Join(identity.ErrAuthenticationUnavailable, err)
+	}
+	return identity.ExternalIdentity{ID: strings.ToLower(payload.ID), Email: email}, nil
+}
+
 func endpoint(baseURL *url.URL, relativePath string) string {
 	base := *baseURL
 	base.Path = strings.TrimSuffix(base.Path, "/") + "/"

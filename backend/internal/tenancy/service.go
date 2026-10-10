@@ -10,6 +10,7 @@ import (
 const (
 	PermissionCreateTenant     = "platform.tenants:create"
 	PermissionManageMembership = "memberships:manage"
+	PermissionManageRoles      = "roles:manage"
 )
 
 type Authorizer interface {
@@ -65,6 +66,27 @@ func (service *Service) CreateMembership(
 		PermissionManageMembership,
 	); err != nil {
 		return Membership{}, err
+	}
+	if err := service.authorizer.RequireTenantPermission(
+		ctx,
+		actorUserID,
+		command.TenantID,
+		PermissionManageRoles,
+	); err != nil {
+		return Membership{}, err
+	}
+	for _, roleID := range command.RoleIDs {
+		if roleID == "01900000-0000-7000-8000-000000000002" {
+			if err := service.authorizer.RequireTenantPermission(
+				ctx,
+				actorUserID,
+				command.TenantID,
+				"tenants:manage",
+			); err != nil {
+				return Membership{}, err
+			}
+			break
+		}
 	}
 	return service.store.CreateMembership(ctx, command)
 }

@@ -35,10 +35,11 @@ func New(
 }
 
 func (handler *Handler) RegisterRoutes(router *gin.Engine) {
-	router.GET("/v1/session/context", handler.requireSession(), handler.sessionContext)
+	router.GET("/v1/session/context", handler.AuthenticationMiddleware(), handler.sessionContext)
 }
 
-func (handler *Handler) requireSession() gin.HandlerFunc {
+// AuthenticationMiddleware validates a Kratos session and binds the mapped user.
+func (handler *Handler) AuthenticationMiddleware() gin.HandlerFunc {
 	return func(ginContext *gin.Context) {
 		user, err := handler.authenticator.Authenticate(
 			ginContext.Request.Context(),
@@ -59,10 +60,16 @@ func (handler *Handler) requireSession() gin.HandlerFunc {
 	}
 }
 
-func (handler *Handler) sessionContext(ginContext *gin.Context) {
+// AuthenticatedUser returns the user bound by AuthenticationMiddleware.
+func AuthenticatedUser(ginContext *gin.Context) (identity.User, bool) {
 	value, exists := ginContext.Get(authenticatedUserKey)
 	user, valid := value.(identity.User)
-	if !exists || !valid {
+	return user, exists && valid
+}
+
+func (handler *Handler) sessionContext(ginContext *gin.Context) {
+	user, valid := AuthenticatedUser(ginContext)
+	if !valid {
 		httpproblem.InternalServerError(ginContext)
 		return
 	}

@@ -40,4 +40,7 @@ consumer receipts within that schema. Migration `000004` introduces the
 `identity` capability schema with application-user mappings and immutable audit
 events. Migration `000005` adds the `tenancy` schema, tenant-scoped membership
 constraints, and durable platform idempotency records. Later domain migrations
-remain owned by their delivery tasks.
+remain owned by their delivery tasks. Migration `000006` seeds the closed
+permission catalogue and immutable system roles, adds platform and membership
+role assignments, and enforces role/permission/tenant scope at the database
+boundary.

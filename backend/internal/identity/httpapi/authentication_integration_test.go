@@ -1,6 +1,6 @@
 //go:build integration
 
-package httpapi
+package httpapi_test
 
 import (
 	"bytes"
@@ -17,7 +17,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/lupppig/credar/backend/internal/authorization"
+	authorizationhttp "github.com/lupppig/credar/backend/internal/authorization/httpapi"
+	authorizationpostgres "github.com/lupppig/credar/backend/internal/authorization/postgres"
 	"github.com/lupppig/credar/backend/internal/identity"
+	identityhttp "github.com/lupppig/credar/backend/internal/identity/httpapi"
 	"github.com/lupppig/credar/backend/internal/identity/kratos"
 	identitypostgres "github.com/lupppig/credar/backend/internal/identity/postgres"
 	"github.com/lupppig/credar/backend/internal/platform/database"
@@ -64,11 +68,20 @@ func TestAuthenticationAgainstKratos(t *testing.T) {
 		t.Fatalf("check Kratos: %v", err)
 	}
 
-	repository := identitypostgres.New(databaseConnection, outbox.NewRepository(databaseConnection))
-	tenancyRepository := tenancypostgres.New(databaseConnection, outbox.NewRepository(databaseConnection))
-	handler := New(identity.NewAuthenticator(kratosClient, repository), tenancyRepository)
+	outboxRepository := outbox.NewRepository(databaseConnection)
+	repository := identitypostgres.New(databaseConnection, outboxRepository)
+	tenancyRepository := tenancypostgres.New(databaseConnection, outboxRepository)
+	authorizationRepository := authorizationpostgres.New(databaseConnection, outboxRepository)
+	handler := identityhttp.New(identity.NewAuthenticator(kratosClient, repository), tenancyRepository)
+	managementHandler := authorizationhttp.New(
+		handler,
+		authorizationRepository,
+		tenancyRepository,
+		tenancy.NewService(authorizationRepository, tenancyRepository),
+	)
 	router := gin.New()
 	handler.RegisterRoutes(router)
+	managementHandler.RegisterRoutes(router)
 
 	missing := performIntegrationRequest(t, router, "")
 	assertProblemCode(t, missing, http.StatusUnauthorized, "authentication_required")
@@ -88,16 +101,16 @@ func TestAuthenticationAgainstKratos(t *testing.T) {
 	if err := json.Unmarshal(valid.Body.Bytes(), &validSession); err != nil {
 		t.Fatalf("decode valid session: %v", err)
 	}
-	writeContext := requestcontext.WithIdentifiers(ctx, mustIntegrationUUIDv7(t), mustIntegrationUUIDv7(t))
-	writeContext = requestcontext.WithUserID(writeContext, validSession.User.ID)
-	createdTenant, err := tenancyRepository.CreateTenant(writeContext, tenancy.CreateTenantCommand{
-		Name:           "Authentication Test Tenant",
-		OwnerUserID:    validSession.User.ID,
-		IdempotencyKey: "authentication-test-tenant",
-	})
+	externalIdentity, err := kratosClient.LookupIdentity(ctx, kratosIdentityID)
 	if err != nil {
-		t.Fatalf("create test tenant: %v", err)
+		t.Fatalf("resolve bootstrap identity: %v", err)
 	}
+	bootstrapContext := requestcontext.WithIdentifiers(ctx, mustIntegrationUUIDv7(t), mustIntegrationUUIDv7(t))
+	if _, err := authorizationRepository.BootstrapPlatformAdmin(bootstrapContext, externalIdentity); err != nil {
+		t.Fatalf("bootstrap platform administrator: %v", err)
+	}
+	createdTenant := createTenantThroughAPI(t, router, sessionToken, validSession.User.ID, "Authentication Test Tenant", "authentication-test-tenant")
+	secondTenant := createTenantThroughAPI(t, router, sessionToken, validSession.User.ID, "Switch Target Tenant", "authentication-test-tenant-2")
 	selected := performIntegrationRequestWithTenant(t, router, sessionToken, createdTenant.Tenant.ID)
 	if selected.Code != http.StatusOK {
 		t.Fatalf("expected selected tenant context to return 200, got %d: %s", selected.Code, selected.Body.String())
@@ -109,11 +122,42 @@ func TestAuthenticationAgainstKratos(t *testing.T) {
 	if err := json.Unmarshal(selected.Body.Bytes(), &selectedSession); err != nil {
 		t.Fatalf("decode selected session: %v", err)
 	}
-	if len(selectedSession.Memberships) != 1 ||
+	if len(selectedSession.Memberships) != 2 ||
 		selectedSession.ActiveTenantID == nil ||
 		*selectedSession.ActiveTenantID != createdTenant.Tenant.ID {
 		t.Fatalf("unexpected selected session context: %+v", selectedSession)
 	}
+	switched := performIntegrationRequestWithTenant(t, router, sessionToken, secondTenant.Tenant.ID)
+	if switched.Code != http.StatusOK {
+		t.Fatalf("expected tenant switch to return 200, got %d: %s", switched.Code, switched.Body.String())
+	}
+	allowed := performAPIRequest(t, router, http.MethodGet, "/v1/roles", sessionToken, createdTenant.Tenant.ID, "", nil)
+	if allowed.Code != http.StatusOK {
+		t.Fatalf("expected owner administration to be allowed, got %d: %s", allowed.Code, allowed.Body.String())
+	}
+
+	memberEmail := "member-" + uuid.NewString() + "@example.com"
+	memberIdentityID := createKratosIdentity(t, ctx, adminURL, memberEmail, password)
+	memberToken := createKratosSession(t, ctx, publicURL, memberEmail, password)
+	memberSessionResponse := performIntegrationRequest(t, router, memberToken)
+	if memberSessionResponse.Code != http.StatusOK {
+		t.Fatalf("map member identity: %s", memberSessionResponse.Body.String())
+	}
+	var memberSession struct {
+		User identity.User `json:"user"`
+	}
+	if err := json.Unmarshal(memberSessionResponse.Body.Bytes(), &memberSession); err != nil {
+		t.Fatal(err)
+	}
+	_ = memberIdentityID
+	memberCreate := performAPIRequest(t, router, http.MethodPost, "/v1/memberships", sessionToken, createdTenant.Tenant.ID, "", map[string]any{"user_id": memberSession.User.ID, "role_ids": []string{authorization.TenantMemberRoleID}})
+	if memberCreate.Code != http.StatusCreated {
+		t.Fatalf("create member through API: %d %s", memberCreate.Code, memberCreate.Body.String())
+	}
+	denied := performAPIRequest(t, router, http.MethodGet, "/v1/roles", memberToken, createdTenant.Tenant.ID, "", nil)
+	assertProblemCode(t, denied, http.StatusForbidden, "permission_denied")
+	substituted := performAPIRequest(t, router, http.MethodGet, "/v1/tenant", memberToken, secondTenant.Tenant.ID, "", nil)
+	assertProblemCode(t, substituted, http.StatusForbidden, "membership_inactive")
 	malformedTenant := performIntegrationRequestWithTenant(t, router, sessionToken, "not-a-uuid")
 	assertProblemCode(t, malformedTenant, http.StatusBadRequest, "invalid_tenant_context")
 	inactiveTenant := performIntegrationRequestWithTenant(t, router, sessionToken, mustIntegrationUUIDv7(t))
@@ -149,6 +193,53 @@ func TestAuthenticationAgainstKratos(t *testing.T) {
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
+}
+
+type createdTenantResponse struct {
+	Tenant tenancy.Tenant `json:"tenant"`
+}
+
+func createTenantThroughAPI(t *testing.T, router http.Handler, token, ownerID, name, key string) createdTenantResponse {
+	t.Helper()
+	response := performAPIRequest(t, router, http.MethodPost, "/v1/tenants", token, "", key, map[string]any{"name": name, "owner_user_id": ownerID})
+	if response.Code != http.StatusCreated {
+		t.Fatalf("create tenant through API: %d: %s", response.Code, response.Body.String())
+	}
+	var created createdTenantResponse
+	if err := json.Unmarshal(response.Body.Bytes(), &created); err != nil {
+		t.Fatal(err)
+	}
+	return created
+}
+
+func performAPIRequest(t *testing.T, router http.Handler, method, path, token, tenantID, idempotencyKey string, payload any) *httptest.ResponseRecorder {
+	t.Helper()
+	var body io.Reader
+	if payload != nil {
+		encoded, err := json.Marshal(payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		body = bytes.NewReader(encoded)
+	}
+	request := httptest.NewRequest(method, path, body)
+	requestID := mustIntegrationUUIDv7(t)
+	request = request.WithContext(requestcontext.WithIdentifiers(request.Context(), requestID, requestID))
+	if token != "" {
+		request.Header.Set("X-Session-Token", token)
+	}
+	if tenantID != "" {
+		request.Header.Set("X-Tenant-ID", tenantID)
+	}
+	if idempotencyKey != "" {
+		request.Header.Set("Idempotency-Key", idempotencyKey)
+	}
+	if payload != nil {
+		request.Header.Set("Content-Type", "application/json")
+	}
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, request)
+	return recorder
 }
 
 func createKratosIdentity(

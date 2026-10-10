@@ -53,6 +53,7 @@ compose run --rm migrate up
   go test -tags=integration ./internal/platform/database
   go test -tags=integration ./internal/identity/postgres
   go test -tags=integration ./internal/tenancy/postgres
+  go test -tags=integration ./internal/authorization/postgres
 )
 
 echo "Database migrations, pooling, readiness, commit, and rollback behavior passed."

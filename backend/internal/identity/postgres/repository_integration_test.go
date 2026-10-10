@@ -29,9 +29,15 @@ func TestIdentityMappingIsAtomicAndConflictSafe(t *testing.T) {
 	}
 	if _, err := pool.Exec(
 		ctx,
-		`TRUNCATE platform.idempotency_records, tenancy.memberships,
-            tenancy.tenants, identity.audit_events, identity.users,
-            platform.outbox_events`,
+		`DELETE FROM identity.membership_role_assignments;
+		 DELETE FROM identity.platform_role_assignments;
+		 DELETE FROM identity.roles WHERE kind = 'CUSTOM';
+		 DELETE FROM platform.idempotency_records;
+		 DELETE FROM tenancy.memberships;
+		 DELETE FROM tenancy.tenants;
+		 TRUNCATE identity.audit_events;
+		 DELETE FROM identity.users;
+		 DELETE FROM platform.outbox_events`,
 	); err != nil {
 		t.Fatalf("truncate identity state: %v", err)
 	}
@@ -104,9 +110,15 @@ func TestIdentityMappingRollsBackWhenOutboxInsertFails(t *testing.T) {
 	}
 	if _, err := pool.Exec(
 		ctx,
-		`TRUNCATE platform.idempotency_records, tenancy.memberships,
-            tenancy.tenants, identity.audit_events, identity.users,
-            platform.outbox_events`,
+		`DELETE FROM identity.membership_role_assignments;
+		 DELETE FROM identity.platform_role_assignments;
+		 DELETE FROM identity.roles WHERE kind = 'CUSTOM';
+		 DELETE FROM platform.idempotency_records;
+		 DELETE FROM tenancy.memberships;
+		 DELETE FROM tenancy.tenants;
+		 TRUNCATE identity.audit_events;
+		 DELETE FROM identity.users;
+		 DELETE FROM platform.outbox_events`,
 	); err != nil {
 		t.Fatalf("truncate identity state: %v", err)
 	}

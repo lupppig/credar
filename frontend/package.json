@@ -11,7 +11,7 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "../scripts/no-e2e-yet.sh",
+    "test:e2e": "../scripts/test-identity-journey.sh",
     "generate": "../scripts/no-generation-yet.sh"
   },
   "dependencies": {

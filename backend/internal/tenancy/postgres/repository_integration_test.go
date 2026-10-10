@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/lupppig/credar/backend/internal/authorization"
 	"github.com/lupppig/credar/backend/internal/identity"
 	"github.com/lupppig/credar/backend/internal/platform/database"
 	"github.com/lupppig/credar/backend/internal/platform/event"
@@ -113,14 +114,14 @@ func TestTenantAndMembershipLifecycle(t *testing.T) {
 
 	membership, err := repository.CreateMembership(
 		newWriteContext(t, ctx, actorUserID),
-		tenancy.CreateMembershipCommand{TenantID: first.Tenant.ID, UserID: memberUserID},
+		tenancy.CreateMembershipCommand{TenantID: first.Tenant.ID, UserID: memberUserID, RoleIDs: []string{authorization.TenantMemberRoleID}},
 	)
 	if err != nil {
 		t.Fatalf("create membership: %v", err)
 	}
 	_, err = repository.CreateMembership(
 		newWriteContext(t, ctx, actorUserID),
-		tenancy.CreateMembershipCommand{TenantID: first.Tenant.ID, UserID: memberUserID},
+		tenancy.CreateMembershipCommand{TenantID: first.Tenant.ID, UserID: memberUserID, RoleIDs: []string{authorization.TenantMemberRoleID}},
 	)
 	if !errors.Is(err, tenancy.ErrMembershipExists) {
 		t.Fatalf("expected duplicate membership conflict, got %v", err)
@@ -186,7 +187,7 @@ func TestTenantAndMembershipLifecycle(t *testing.T) {
 
 	rejoined, err := repository.CreateMembership(
 		newWriteContext(t, ctx, actorUserID),
-		tenancy.CreateMembershipCommand{TenantID: first.Tenant.ID, UserID: memberUserID},
+		tenancy.CreateMembershipCommand{TenantID: first.Tenant.ID, UserID: memberUserID, RoleIDs: []string{authorization.TenantMemberRoleID}},
 	)
 	if err != nil {
 		t.Fatalf("rejoin membership: %v", err)
@@ -270,9 +271,15 @@ func truncateTenancyState(t *testing.T, ctx context.Context, databaseConnection 
 	}
 	if _, err := pool.Exec(
 		ctx,
-		`TRUNCATE platform.idempotency_records, tenancy.memberships,
-            tenancy.tenants, identity.audit_events, identity.users,
-            platform.outbox_events`,
+		`DELETE FROM identity.membership_role_assignments;
+		 DELETE FROM identity.platform_role_assignments;
+		 DELETE FROM identity.roles WHERE kind = 'CUSTOM';
+		 DELETE FROM platform.idempotency_records;
+		 DELETE FROM tenancy.memberships;
+		 DELETE FROM tenancy.tenants;
+		 TRUNCATE identity.audit_events;
+		 DELETE FROM identity.users;
+		 DELETE FROM platform.outbox_events`,
 	); err != nil {
 		t.Fatalf("truncate tenancy state: %v", err)
 	}

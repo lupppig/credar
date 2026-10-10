@@ -28,12 +28,19 @@ func (repository *Repository) ResolveSessionContext(
 	rows, err := pool.Query(
 		ctx,
 		`SELECT memberships.id, memberships.status,
-                tenants.id, tenants.name, tenants.status
+		        tenants.id, tenants.name, tenants.status,
+		        COALESCE(array_agg(roles.name ORDER BY roles.name)
+		            FILTER (WHERE roles.id IS NOT NULL), ARRAY[]::text[])
          FROM tenancy.memberships AS memberships
          JOIN tenancy.tenants AS tenants ON tenants.id = memberships.tenant_id
+		 LEFT JOIN identity.membership_role_assignments AS assignments
+		   ON assignments.membership_id = memberships.id
+		 LEFT JOIN identity.roles AS roles ON roles.id = assignments.role_id
          WHERE memberships.user_id = $1
            AND memberships.status = 'ACTIVE'
            AND tenants.status = 'ACTIVE'
+		 GROUP BY memberships.id, memberships.status,
+		          tenants.id, tenants.name, tenants.status, tenants.created_at
          ORDER BY tenants.created_at, tenants.id, memberships.id`,
 		userID,
 	)
@@ -55,13 +62,13 @@ func (repository *Repository) ResolveSessionContext(
 			&membership.Tenant.ID,
 			&membership.Tenant.Name,
 			&membership.Tenant.Status,
+			&membership.RoleNames,
 		); err != nil {
 			return nil, nil, errors.Join(
 				identity.ErrTenantContextUnavailable,
 				fmt.Errorf("scan active membership: %w", err),
 			)
 		}
-		membership.RoleNames = make([]string, 0)
 		memberships = append(memberships, membership)
 		if membership.Tenant.ID == selectedTenantID {
 			selectedFound = true

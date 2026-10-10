@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	authorizationhttp "github.com/lupppig/credar/backend/internal/authorization/httpapi"
+	authorizationpostgres "github.com/lupppig/credar/backend/internal/authorization/postgres"
 	"github.com/lupppig/credar/backend/internal/identity"
 	identityhttp "github.com/lupppig/credar/backend/internal/identity/httpapi"
 	"github.com/lupppig/credar/backend/internal/identity/kratos"
@@ -26,6 +28,7 @@ import (
 	"github.com/lupppig/credar/backend/internal/platform/objectstorage"
 	"github.com/lupppig/credar/backend/internal/platform/outbox"
 	"github.com/lupppig/credar/backend/internal/platform/redisclient"
+	"github.com/lupppig/credar/backend/internal/tenancy"
 	tenancypostgres "github.com/lupppig/credar/backend/internal/tenancy/postgres"
 )
 
@@ -90,8 +93,16 @@ func main() {
 	}
 	identityRepository := identitypostgres.New(databaseConnection, outboxRepository)
 	tenancyRepository := tenancypostgres.New(databaseConnection, outboxRepository)
+	authorizationRepository := authorizationpostgres.New(databaseConnection, outboxRepository)
 	authenticator := identity.NewAuthenticator(kratosClient, identityRepository)
 	identityHandler := identityhttp.New(authenticator, tenancyRepository)
+	tenancyService := tenancy.NewService(authorizationRepository, tenancyRepository)
+	authorizationHandler := authorizationhttp.New(
+		identityHandler,
+		authorizationRepository,
+		tenancyRepository,
+		tenancyService,
+	)
 	outboxRelay, err := outbox.NewRelay(outboxRepository, natsConnection, outbox.RelayConfig{
 		PollInterval:  configuration.Outbox.PollInterval,
 		LeaseDuration: configuration.Outbox.LeaseDuration,
@@ -123,7 +134,13 @@ func main() {
 		logger.Error("configure runtime dependencies", "error", err)
 		os.Exit(1)
 	}
-	server := platformhttp.New(configuration.HTTPAddress, logger, dependencies, identityHandler)
+	server := platformhttp.New(
+		configuration.HTTPAddress,
+		logger,
+		dependencies,
+		identityHandler,
+		authorizationHandler,
+	)
 
 	shutdownSignals, stop := signal.NotifyContext(
 		context.Background(),

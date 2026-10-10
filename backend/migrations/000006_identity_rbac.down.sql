@@ -1,0 +1,13 @@
+DROP TRIGGER IF EXISTS identity_roles_reject_system_update ON identity.roles;
+DROP FUNCTION IF EXISTS identity.reject_system_role_mutation();
+DROP TRIGGER IF EXISTS identity_membership_role_assignments_validate ON identity.membership_role_assignments;
+DROP FUNCTION IF EXISTS identity.validate_membership_role_assignment();
+DROP TRIGGER IF EXISTS identity_platform_role_assignments_validate ON identity.platform_role_assignments;
+DROP FUNCTION IF EXISTS identity.validate_platform_role_assignment();
+DROP TRIGGER IF EXISTS identity_role_permissions_validate_scope ON identity.role_permissions;
+DROP FUNCTION IF EXISTS identity.validate_role_permission_scope();
+DROP TABLE IF EXISTS identity.membership_role_assignments;
+DROP TABLE IF EXISTS identity.platform_role_assignments;
+DROP TABLE IF EXISTS identity.role_permissions;
+DROP TABLE IF EXISTS identity.roles;
+DROP TABLE IF EXISTS identity.permissions;

@@ -1,7 +1,7 @@
 SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 
-.PHONY: help doctor bootstrap format format-check lint contracts migrations-check unit integration database-test authentication-test event-test adapters-test infrastructure-test full-stack-test e2e test build smoke smoke-backend smoke-frontend generate generate-check migrate-up migrate-down migrate-version infra-up infra-down infra-reset dev down check ci
+.PHONY: help doctor bootstrap bootstrap-admin format format-check lint contracts migrations-check unit integration database-test authentication-test event-test adapters-test infrastructure-test full-stack-test e2e test build smoke smoke-backend smoke-frontend generate generate-check migrate-up migrate-down migrate-version infra-up infra-down infra-reset dev down check ci
 
 help: ## Show the stable repository command surface.
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -12,6 +12,10 @@ doctor: ## Validate required local toolchains and print actionable failures.
 bootstrap: doctor ## Install locked Go and JavaScript dependencies.
 	@cd backend && go mod download
 	@pnpm install --frozen-lockfile
+
+bootstrap-admin: ## Assign the first platform administrator (KRATOS_IDENTITY_ID required).
+	@test -n "$(KRATOS_IDENTITY_ID)" || { echo "KRATOS_IDENTITY_ID is required" >&2; exit 2; }
+	@cd backend && go run ./cmd/bootstrap-admin --kratos-identity-id "$(KRATOS_IDENTITY_ID)"
 
 format: ## Format all authored backend and frontend files.
 	@cd backend && gofmt -w $$(find . -type f -name '*.go' -not -path './vendor/*')

@@ -11,7 +11,9 @@ RUN pnpm install --frozen-lockfile --filter @credar/frontend...
 FROM dependencies AS build
 
 ARG NEXT_PUBLIC_CREDAR_API_BASE_URL=http://localhost:8080
+ARG NEXT_PUBLIC_CREDAR_KRATOS_BROWSER_URL=http://localhost:4433
 ENV NEXT_PUBLIC_CREDAR_API_BASE_URL=${NEXT_PUBLIC_CREDAR_API_BASE_URL}
+ENV NEXT_PUBLIC_CREDAR_KRATOS_BROWSER_URL=${NEXT_PUBLIC_CREDAR_KRATOS_BROWSER_URL}
 
 COPY frontend/ ./frontend/
 RUN pnpm --dir frontend build

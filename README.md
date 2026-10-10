@@ -8,14 +8,14 @@ platform's entire domain model.
 ## Delivery status
 
 The dependency-ordered roadmap starts with Phase 00. Foundation and local
-runtime acceptance are complete, so Phase 02 can now establish authenticated,
-tenant-scoped authorization.
+runtime acceptance and the identity control plane are complete, so the next
+phase can build on authenticated, tenant-scoped authorization.
 
-| Phase                                       | Status   | Outcome                                              |
-| ------------------------------------------- | -------- | ---------------------------------------------------- |
-| 00 — Foundation and production CI           | Complete | Repository contracts and repeatable quality pipeline |
-| 01 — Local runtime and infrastructure spine | Complete | Healthy local stack and transaction-to-event proof   |
-| 02 — Identity, tenancy, and RBAC            | Active   | Tenant and membership domain implemented             |
+| Phase                                       | Status   | Outcome                                               |
+| ------------------------------------------- | -------- | ----------------------------------------------------- |
+| 00 — Foundation and production CI           | Complete | Repository contracts and repeatable quality pipeline  |
+| 01 — Local runtime and infrastructure spine | Complete | Healthy local stack and transaction-to-event proof    |
+| 02 — Identity, tenancy, and RBAC            | Complete | Authenticated tenant context and server-enforced RBAC |
 
 P00-01 through P00-06 are complete. Foundational decisions and repository
 commands are recorded, both applications and production images build and pass
@@ -38,8 +38,12 @@ payloads in [the identity contract](docs/identity-authorization.md). P02-02
 validates Kratos sessions server-side and maps them exactly once to application
 users with transactional audit and outbox records. P02-03 adds idempotent tenant
 creation, membership lifecycle persistence, and explicit active-tenant session
-context. The next task is **P02-04 — Implement roles, permissions, and
-authorization**.
+context. P02-04 through P02-07 add seeded immutable roles, tenant custom roles,
+scope-safe assignment, centralized authorization, protected administration
+routes, last-owner and last-platform-admin invariants, a one-time Kratos-backed
+administrator bootstrap, the identity console, reusable isolation assertions,
+and a real Kratos journey proving allowed, denied, and switched-tenant access.
+See the [Phase 02 handoff](docs/handoffs/phase-02.md).
 Accepted decisions are recorded in
 [`docs/adr`](docs/adr/README.md).
 
@@ -61,30 +65,31 @@ Only directories with implemented content are added to version control.
 Run `make help` for the command list and `make doctor` to validate local
 toolchains. The stable command surface is:
 
-| Command                                 | Purpose                                          |
-| --------------------------------------- | ------------------------------------------------ |
-| `make bootstrap`                        | Install locked dependencies                      |
-| `make format` / `make format-check`     | Apply or verify formatting                       |
-| `make lint`                             | Run static analysis                              |
-| `make contracts`                        | Validate OpenAPI and event/audit schemas         |
-| `make migrations-check`                 | Validate migration naming and up/down pairing    |
-| `make unit`                             | Run deterministic unit tests                     |
-| `make integration`                      | Run tests against real infrastructure boundaries |
-| `make authentication-test`              | Verify Kratos sessions and application mapping   |
-| `make infrastructure-test`              | Verify dependencies from isolated empty volumes  |
-| `make full-stack-test`                  | Prove the built stack and correlated event path  |
-| `make event-test`                       | Prove transactional event delivery and deduping  |
-| `make adapters-test`                    | Verify Redis and object-storage adapter behavior |
-| `make e2e`                              | Run critical browser journeys                    |
-| `make build`                            | Build production application artifacts           |
-| `make smoke`                            | Start and probe both built applications          |
-| `make generate` / `make generate-check` | Refresh or verify derived source                 |
-| `make migrate-up` / `make migrate-down` | Apply or revert local migrations                 |
-| `make infra-up` / `make infra-down`     | Start or stop local dependency services          |
-| `make infra-reset`                      | Delete local dependency services and their data  |
-| `make dev` / `make down`                | Start or stop the complete local stack           |
-| `make check`                            | Run the fast local quality gate                  |
-| `make ci`                               | Run the non-browser CI gate                      |
+| Command                                     | Purpose                                          |
+| ------------------------------------------- | ------------------------------------------------ |
+| `make bootstrap`                            | Install locked dependencies                      |
+| `make format` / `make format-check`         | Apply or verify formatting                       |
+| `make lint`                                 | Run static analysis                              |
+| `make contracts`                            | Validate OpenAPI and event/audit schemas         |
+| `make migrations-check`                     | Validate migration naming and up/down pairing    |
+| `make unit`                                 | Run deterministic unit tests                     |
+| `make integration`                          | Run tests against real infrastructure boundaries |
+| `make authentication-test`                  | Verify Kratos sessions and application mapping   |
+| `make bootstrap-admin KRATOS_IDENTITY_ID=…` | Assign the first platform administrator once     |
+| `make infrastructure-test`                  | Verify dependencies from isolated empty volumes  |
+| `make full-stack-test`                      | Prove the built stack and correlated event path  |
+| `make event-test`                           | Prove transactional event delivery and deduping  |
+| `make adapters-test`                        | Verify Redis and object-storage adapter behavior |
+| `make e2e`                                  | Run critical browser journeys                    |
+| `make build`                                | Build production application artifacts           |
+| `make smoke`                                | Start and probe both built applications          |
+| `make generate` / `make generate-check`     | Refresh or verify derived source                 |
+| `make migrate-up` / `make migrate-down`     | Apply or revert local migrations                 |
+| `make infra-up` / `make infra-down`         | Start or stop local dependency services          |
+| `make infra-reset`                          | Delete local dependency services and their data  |
+| `make dev` / `make down`                    | Start or stop the complete local stack           |
+| `make check`                                | Run the fast local quality gate                  |
+| `make ci`                                   | Run the non-browser CI gate                      |
 
 Configuration and generated-source rules are documented in
 [`docs/configuration.md`](docs/configuration.md) and

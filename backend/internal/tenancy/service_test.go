@@ -14,6 +14,7 @@ type authorizerStub struct {
 	err                error
 	platformPermission string
 	tenantPermission   string
+	tenantPermissions  []string
 	tenantID           string
 }
 
@@ -30,6 +31,7 @@ func (stub *authorizerStub) RequireTenantPermission(
 ) error {
 	stub.tenantID = tenantID
 	stub.tenantPermission = permission
+	stub.tenantPermissions = append(stub.tenantPermissions, permission)
 	return stub.err
 }
 
@@ -80,7 +82,10 @@ func TestServiceChecksTenantPermissionBeforeMembershipChanges(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create membership: %v", err)
 	}
-	if authorizer.tenantID != "tenant" || authorizer.tenantPermission != PermissionManageMembership || store.createMembershipCalls != 1 {
+	if authorizer.tenantID != "tenant" || len(authorizer.tenantPermissions) != 2 ||
+		authorizer.tenantPermissions[0] != PermissionManageMembership ||
+		authorizer.tenantPermissions[1] != PermissionManageRoles ||
+		store.createMembershipCalls != 1 {
 		t.Fatalf("membership creation did not use tenant permission")
 	}
 

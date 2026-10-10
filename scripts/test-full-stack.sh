@@ -96,9 +96,9 @@ curl \
 grep -qi "^X-Request-ID: ${request_id}" "${backend_headers}"
 grep -qi "^X-Correlation-ID: ${correlation_id}" "${backend_headers}"
 
-frontend_response="$(wait_for_response "${frontend_url}/" 'Operational foundations, ready for product work.')"
-[[ "${frontend_response}" == *"Operational foundations, ready for product work."* ]] || {
-  echo "Frontend did not serve the built enterprise shell." >&2
+frontend_response="$(wait_for_response "${frontend_url}/" 'Resolving your workspace')"
+[[ "${frontend_response}" == *"Resolving your workspace"* ]] || {
+  echo "Frontend did not serve the built identity console." >&2
   exit 1
 }
 

@@ -120,26 +120,28 @@ Stable actions are `identity.user_linked`, `identity.user_disabled`,
 
 All errors use the shared `application/problem+json` schema.
 
-| HTTP | Code                            | Meaning                                       |
-| ---- | ------------------------------- | --------------------------------------------- |
-| 400  | `tenant_context_required`       | A protected tenant endpoint lacks the header  |
-| 400  | `invalid_tenant_context`        | `X-Tenant-ID` is malformed                    |
-| 401  | `authentication_required`       | No Kratos session was supplied                |
-| 401  | `invalid_session`               | The supplied session is invalid or expired    |
-| 403  | `user_disabled`                 | The mapped platform user is disabled          |
-| 403  | `membership_inactive`           | Membership is disabled or removed             |
-| 403  | `permission_denied`             | Permission evaluation denied the action       |
-| 404  | `resource_not_found`            | Resource is absent or outside tenant scope    |
-| 409  | `identity_mapping_conflict`     | Kratos identity mapping is inconsistent       |
-| 409  | `idempotency_key_reused`        | The key was reused with different input       |
-| 409  | `membership_already_exists`     | A current membership already exists           |
-| 409  | `invalid_membership_transition` | The requested status transition is forbidden  |
-| 409  | `last_tenant_owner_required`    | The change would leave no active owner        |
-| 409  | `last_platform_admin_required`  | The change would leave no platform admin      |
-| 409  | `system_role_immutable`         | A system role mutation was attempted          |
-| 409  | `permission_scope_escalation`   | A custom role requested forbidden permission  |
-| 503  | `authentication_unavailable`    | Kratos or identity persistence is unavailable |
-| 503  | `tenant_context_unavailable`    | Tenant membership context is unavailable      |
+| HTTP | Code                            | Meaning                                        |
+| ---- | ------------------------------- | ---------------------------------------------- |
+| 400  | `tenant_context_required`       | A protected tenant endpoint lacks the header   |
+| 400  | `invalid_tenant_context`        | `X-Tenant-ID` is malformed                     |
+| 401  | `authentication_required`       | No Kratos session was supplied                 |
+| 401  | `invalid_session`               | The supplied session is invalid or expired     |
+| 403  | `user_disabled`                 | The mapped platform user is disabled           |
+| 403  | `membership_inactive`           | Membership is disabled or removed              |
+| 403  | `permission_denied`             | Permission evaluation denied the action        |
+| 404  | `resource_not_found`            | Resource is absent or outside tenant scope     |
+| 409  | `identity_mapping_conflict`     | Kratos identity mapping is inconsistent        |
+| 409  | `idempotency_key_reused`        | The key was reused with different input        |
+| 409  | `membership_already_exists`     | A current membership already exists            |
+| 409  | `invalid_membership_transition` | The requested status transition is forbidden   |
+| 409  | `last_tenant_owner_required`    | The change would leave no active owner         |
+| 409  | `last_platform_admin_required`  | The change would leave no platform admin       |
+| 409  | `system_role_immutable`         | A system role mutation was attempted           |
+| 409  | `permission_scope_escalation`   | A custom role requested forbidden permission   |
+| 409  | `role_assigned`                 | A custom role remains assigned to a membership |
+| 503  | `authentication_unavailable`    | Kratos or identity persistence is unavailable  |
+| 503  | `tenant_context_unavailable`    | Tenant membership context is unavailable       |
+| 503  | `authorization_unavailable`     | Authorization persistence is unavailable       |
 
 ## Integration events
 

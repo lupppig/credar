@@ -65,6 +65,7 @@ type CreateTenantCommand struct {
 type CreateMembershipCommand struct {
 	TenantID string
 	UserID   string
+	RoleIDs  []string
 }
 
 type ChangeMembershipStatusCommand struct {

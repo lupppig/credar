@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/lupppig/credar/backend/internal/authorization"
 	"github.com/lupppig/credar/backend/internal/platform/database"
 	"github.com/lupppig/credar/backend/internal/platform/event"
 	"github.com/lupppig/credar/backend/internal/tenancy"
@@ -35,7 +36,9 @@ func wrapPersistenceError(err error) error {
 		errors.Is(err, tenancy.ErrUserNotFound) ||
 		errors.Is(err, tenancy.ErrMembershipNotFound) ||
 		errors.Is(err, tenancy.ErrMembershipExists) ||
-		errors.Is(err, tenancy.ErrInvalidTransition) {
+		errors.Is(err, tenancy.ErrInvalidTransition) ||
+		errors.Is(err, authorization.ErrPermissionScopeEscalation) ||
+		errors.Is(err, authorization.ErrLastTenantOwnerRequired) {
 		return err
 	}
 	return errors.Join(tenancy.ErrUnavailable, err)

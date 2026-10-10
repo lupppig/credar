@@ -13,6 +13,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/lupppig/credar/backend/internal/authorization"
 	"github.com/lupppig/credar/backend/internal/platform/database"
 	"github.com/lupppig/credar/backend/internal/platform/event"
 	"github.com/lupppig/credar/backend/internal/platform/identifier"
@@ -219,6 +220,15 @@ func (repository *Repository) insertTenant(
 	); err != nil {
 		return tenancy.CreatedTenant{}, fmt.Errorf("insert initial membership: %w", err)
 	}
+	if _, err := transaction.Exec(
+		ctx,
+		`INSERT INTO identity.membership_role_assignments (membership_id, role_id)
+		 VALUES ($1, $2)`,
+		result.InitialMembership.ID,
+		authorization.TenantOwnerRoleID,
+	); err != nil {
+		return tenancy.CreatedTenant{}, fmt.Errorf("assign initial owner role: %w", err)
+	}
 
 	if err := insertAudit(
 		ctx,
@@ -303,7 +313,7 @@ func (repository *Repository) CreateMembership(
 	if err != nil {
 		return tenancy.Membership{}, err
 	}
-	if !identifier.IsUUIDv7(command.TenantID) || !identifier.IsUUIDv7(command.UserID) {
+	if !identifier.IsUUIDv7(command.TenantID) || !identifier.IsUUIDv7(command.UserID) || len(command.RoleIDs) == 0 {
 		return tenancy.Membership{}, tenancy.ErrInvalidInput
 	}
 
@@ -314,6 +324,24 @@ func (repository *Repository) CreateMembership(
 		}
 		if err := requireActiveTenantAndUser(ctx, transaction, command.TenantID, command.UserID); err != nil {
 			return err
+		}
+		roleIDs := uniqueRoleIDs(command.RoleIDs)
+		if len(roleIDs) != len(command.RoleIDs) {
+			return tenancy.ErrInvalidInput
+		}
+		var roleCount int
+		if err := transaction.QueryRow(
+			ctx,
+			`SELECT COUNT(*) FROM identity.roles
+			 WHERE id = ANY($1) AND scope = 'TENANT'
+			   AND (tenant_id IS NULL OR tenant_id = $2)`,
+			roleIDs,
+			command.TenantID,
+		).Scan(&roleCount); err != nil {
+			return fmt.Errorf("validate membership roles: %w", err)
+		}
+		if roleCount != len(roleIDs) {
+			return authorization.ErrPermissionScopeEscalation
 		}
 		var exists bool
 		if err := transaction.QueryRow(
@@ -356,6 +384,17 @@ func (repository *Repository) CreateMembership(
 			now,
 		); err != nil {
 			return fmt.Errorf("insert membership: %w", err)
+		}
+		for _, roleID := range roleIDs {
+			if _, err := transaction.Exec(
+				ctx,
+				`INSERT INTO identity.membership_role_assignments (membership_id, role_id)
+				 VALUES ($1, $2)`,
+				membership.ID,
+				roleID,
+			); err != nil {
+				return fmt.Errorf("assign membership role: %w", err)
+			}
 		}
 		if err := insertAudit(
 			ctx,
@@ -443,6 +482,43 @@ func (repository *Repository) ChangeMembershipStatus(
 		previousStatus = membership.Status
 		if !tenancy.CanTransitionMembership(previousStatus, command.Status) {
 			return tenancy.ErrInvalidTransition
+		}
+		if previousStatus == tenancy.MembershipStatusActive &&
+			command.Status != tenancy.MembershipStatusActive {
+			var isOwner bool
+			if err := transaction.QueryRow(
+				ctx,
+				`SELECT EXISTS (
+					SELECT 1 FROM identity.membership_role_assignments
+					WHERE membership_id = $1 AND role_id = $2
+				)`,
+				membership.ID,
+				authorization.TenantOwnerRoleID,
+			).Scan(&isOwner); err != nil {
+				return fmt.Errorf("query owner assignment: %w", err)
+			}
+			if isOwner {
+				var otherOwners int
+				if err := transaction.QueryRow(
+					ctx,
+					`SELECT COUNT(*)
+					 FROM tenancy.memberships memberships
+					 JOIN identity.membership_role_assignments assignments
+					   ON assignments.membership_id = memberships.id
+					 WHERE memberships.tenant_id = $1
+					   AND memberships.id <> $2
+					   AND memberships.status = 'ACTIVE'
+					   AND assignments.role_id = $3`,
+					membership.TenantID,
+					membership.ID,
+					authorization.TenantOwnerRoleID,
+				).Scan(&otherOwners); err != nil {
+					return fmt.Errorf("count active tenant owners: %w", err)
+				}
+				if otherOwners == 0 {
+					return authorization.ErrLastTenantOwnerRequired
+				}
+			}
 		}
 		now := time.Now().UTC()
 		membership.Status = command.Status
@@ -645,4 +721,20 @@ func validIdempotencyKey(value string) bool {
 		}
 	}
 	return true
+}
+
+func uniqueRoleIDs(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if !identifier.IsUUIDv7(value) {
+			continue
+		}
+		if _, exists := seen[value]; exists {
+			continue
+		}
+		seen[value] = struct{}{}
+		result = append(result, value)
+	}
+	return result
 }
