@@ -47,6 +47,9 @@ jobs:
       - name: Run PostgreSQL integration tests
         run: make database-test
 
+      - name: Run Kratos authentication integration tests
+        run: make authentication-test
+
       - name: Run outbox and JetStream integration tests
         run: make event-test
 

@@ -24,9 +24,20 @@ type Readiness interface {
 	Readiness(context.Context) dependency.ReadinessReport
 }
 
-// New returns the minimal HTTP server used to prove the backend build and
-// runtime. Domain routes are added by their owning modules in later phases.
-func New(address string, logger *slog.Logger, readiness Readiness) *http.Server {
+// RouteRegistrar lets capability modules own their routes without coupling the
+// platform server to their handlers.
+type RouteRegistrar interface {
+	RegisterRoutes(*gin.Engine)
+}
+
+// New returns the platform HTTP server with routes contributed by capability
+// modules.
+func New(
+	address string,
+	logger *slog.Logger,
+	readiness Readiness,
+	registrars ...RouteRegistrar,
+) *http.Server {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.RedirectTrailingSlash = false
@@ -39,6 +50,9 @@ func New(address string, logger *slog.Logger, readiness Readiness) *http.Server 
 	router.GET("/healthz", liveness)
 	router.GET("/livez", liveness)
 	router.GET("/readyz", readinessHandler(readiness))
+	for _, registrar := range registrars {
+		registrar.RegisterRoutes(router)
+	}
 
 	return &http.Server{
 		Addr:              address,
@@ -122,6 +136,7 @@ func logRequests(logger *slog.Logger) gin.HandlerFunc {
 			"status", context.Writer.Status(),
 			"request_id", context.Writer.Header().Get("X-Request-ID"),
 			"correlation_id", context.Writer.Header().Get("X-Correlation-ID"),
+			"user_id", requestcontext.UserID(context.Request.Context()),
 			"duration_ms", time.Since(startedAt).Milliseconds(),
 		)
 	}

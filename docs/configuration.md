@@ -101,6 +101,23 @@ The adapter uses opaque UUIDv7 object keys. Business content-type, size,
 authorization, retention, and metadata rules remain with the future module
 that owns each object use case.
 
+## Kratos authentication
+
+- `CREDAR_KRATOS_PUBLIC_URL` is the server-side Kratos endpoint used to
+  validate cookies and native session tokens through `sessions/whoami`.
+- `CREDAR_KRATOS_ADMIN_URL` is the server-only admin endpoint used for the
+  Kratos readiness check. It must never be exposed through a `NEXT_PUBLIC_`
+  variable.
+- `CREDAR_KRATOS_REQUEST_TIMEOUT_SECONDS` bounds validation and readiness
+  requests from 1 through 60 seconds.
+- `CREDAR_KRATOS_SESSION_LIFESPAN` configures the local Kratos container. Its
+  24-hour default is shortened only by the isolated authentication acceptance
+  test so expiry behavior remains fast and deterministic.
+
+The API forwards only the incoming Kratos cookie and `X-Session-Token` to the
+identity service. Credentials and Kratos response payloads are never persisted
+in application tables, audit records, events, or request logs.
+
 ## Next.js runtime
 
 - `NEXT_PUBLIC_CREDAR_API_BASE_URL` is the browser-visible API origin. It is

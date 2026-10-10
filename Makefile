@@ -1,7 +1,7 @@
 SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 
-.PHONY: help doctor bootstrap format format-check lint contracts migrations-check unit integration database-test event-test adapters-test infrastructure-test full-stack-test e2e test build smoke smoke-backend smoke-frontend generate generate-check migrate-up migrate-down migrate-version infra-up infra-down infra-reset dev down check ci
+.PHONY: help doctor bootstrap format format-check lint contracts migrations-check unit integration database-test authentication-test event-test adapters-test infrastructure-test full-stack-test e2e test build smoke smoke-backend smoke-frontend generate generate-check migrate-up migrate-down migrate-version infra-up infra-down infra-reset dev down check ci
 
 help: ## Show the stable repository command surface.
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -40,6 +40,7 @@ unit: ## Run deterministic unit tests.
 
 integration: ## Run integration tests against isolated dependencies.
 	@./scripts/test-database.sh
+	@./scripts/test-authentication.sh
 	@./scripts/test-events.sh
 	@./scripts/test-adapters.sh
 	@./scripts/test-infrastructure.sh
@@ -47,6 +48,9 @@ integration: ## Run integration tests against isolated dependencies.
 
 database-test: ## Verify migrations, PostgreSQL pooling, and transaction behavior.
 	@./scripts/test-database.sh
+
+authentication-test: ## Verify Kratos sessions and application identity mapping.
+	@./scripts/test-authentication.sh
 
 event-test: ## Verify transactional outbox and JetStream delivery behavior.
 	@./scripts/test-events.sh

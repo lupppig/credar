@@ -51,33 +51,39 @@ func TestLoadUsesSafeLocalDefaults(t *testing.T) {
 	if loaded.ObjectStorage.Endpoint != "http://127.0.0.1:8333" || loaded.ObjectStorage.Bucket != "credar-local" {
 		t.Fatalf("unexpected object-storage defaults: %#v", loaded.ObjectStorage)
 	}
+	if loaded.Kratos.PublicURL != "http://127.0.0.1:4433" || loaded.Kratos.AdminURL != "http://127.0.0.1:4434" || loaded.Kratos.Timeout != 2*time.Second {
+		t.Fatalf("unexpected Kratos defaults: %#v", loaded.Kratos)
+	}
 }
 
 func TestLoadAcceptsExplicitConfiguration(t *testing.T) {
 	t.Parallel()
 
 	values := map[string]string{
-		"CREDAR_ENVIRONMENT":                   "sandbox",
-		"CREDAR_LOG_LEVEL":                     "debug",
-		"CREDAR_HTTP_ADDRESS":                  "127.0.0.1:9090",
-		"CREDAR_HTTP_SHUTDOWN_TIMEOUT_SECONDS": "15",
-		"CREDAR_READINESS_TIMEOUT_SECONDS":     "3",
-		"CREDAR_DATABASE_URL":                  "postgres://user:secret@database:5432/testdb?sslmode=disable",
-		"CREDAR_DATABASE_MAX_CONNECTIONS":      "20",
-		"CREDAR_DATABASE_MIN_CONNECTIONS":      "2",
-		"CREDAR_NATS_URL":                      "tls://user:secret@nats.example:4222",
-		"CREDAR_OUTBOX_POLL_MILLISECONDS":      "100",
-		"CREDAR_OUTBOX_LEASE_SECONDS":          "20",
-		"CREDAR_OUTBOX_BATCH_SIZE":             "25",
-		"CREDAR_OUTBOX_MAX_ATTEMPTS":           "6",
-		"CREDAR_OUTBOX_BASE_BACKOFF_SECONDS":   "2",
-		"CREDAR_OUTBOX_MAX_BACKOFF_SECONDS":    "120",
-		"CREDAR_REDIS_URL":                     "rediss://user:secret@redis.example:6380/2",
-		"CREDAR_REDIS_KEY_PREFIX":              "sandbox_test",
-		"CREDAR_OBJECT_STORAGE_ENDPOINT":       "https://objects.example:9443",
-		"CREDAR_OBJECT_STORAGE_BUCKET":         "sandbox-objects",
-		"CREDAR_OBJECT_STORAGE_ACCESS_KEY":     "object-access",
-		"CREDAR_OBJECT_STORAGE_SECRET_KEY":     "object-secret",
+		"CREDAR_ENVIRONMENT":                    "sandbox",
+		"CREDAR_LOG_LEVEL":                      "debug",
+		"CREDAR_HTTP_ADDRESS":                   "127.0.0.1:9090",
+		"CREDAR_HTTP_SHUTDOWN_TIMEOUT_SECONDS":  "15",
+		"CREDAR_READINESS_TIMEOUT_SECONDS":      "3",
+		"CREDAR_DATABASE_URL":                   "postgres://user:secret@database:5432/testdb?sslmode=disable",
+		"CREDAR_DATABASE_MAX_CONNECTIONS":       "20",
+		"CREDAR_DATABASE_MIN_CONNECTIONS":       "2",
+		"CREDAR_NATS_URL":                       "tls://user:secret@nats.example:4222",
+		"CREDAR_OUTBOX_POLL_MILLISECONDS":       "100",
+		"CREDAR_OUTBOX_LEASE_SECONDS":           "20",
+		"CREDAR_OUTBOX_BATCH_SIZE":              "25",
+		"CREDAR_OUTBOX_MAX_ATTEMPTS":            "6",
+		"CREDAR_OUTBOX_BASE_BACKOFF_SECONDS":    "2",
+		"CREDAR_OUTBOX_MAX_BACKOFF_SECONDS":     "120",
+		"CREDAR_REDIS_URL":                      "rediss://user:secret@redis.example:6380/2",
+		"CREDAR_REDIS_KEY_PREFIX":               "sandbox_test",
+		"CREDAR_OBJECT_STORAGE_ENDPOINT":        "https://objects.example:9443",
+		"CREDAR_OBJECT_STORAGE_BUCKET":          "sandbox-objects",
+		"CREDAR_OBJECT_STORAGE_ACCESS_KEY":      "object-access",
+		"CREDAR_OBJECT_STORAGE_SECRET_KEY":      "object-secret",
+		"CREDAR_KRATOS_PUBLIC_URL":              "https://identity.example/public",
+		"CREDAR_KRATOS_ADMIN_URL":               "https://identity.example/admin",
+		"CREDAR_KRATOS_REQUEST_TIMEOUT_SECONDS": "4",
 	}
 	loaded, err := config.Load(mapEnvironment(values))
 	if err != nil {
@@ -114,6 +120,9 @@ func TestLoadAcceptsExplicitConfiguration(t *testing.T) {
 	if loaded.ObjectStorage.AccessKey.String() != "<redacted>" || loaded.ObjectStorage.SecretKey.String() != "<redacted>" {
 		t.Fatalf("object-storage credentials were not redacted: %#v", loaded.ObjectStorage)
 	}
+	if loaded.Kratos.PublicURL != "https://identity.example/public" || loaded.Kratos.Timeout != 4*time.Second {
+		t.Fatalf("unexpected Kratos configuration: %#v", loaded.Kratos)
+	}
 }
 
 func TestLoadRejectsInvalidValuesWithVariableName(t *testing.T) {
@@ -143,6 +152,9 @@ func TestLoadRejectsInvalidValuesWithVariableName(t *testing.T) {
 		{name: "object bucket IP", variable: "CREDAR_OBJECT_STORAGE_BUCKET", value: "127.0.0.1"},
 		{name: "object access key", variable: "CREDAR_OBJECT_STORAGE_ACCESS_KEY", value: ""},
 		{name: "object secret key", variable: "CREDAR_OBJECT_STORAGE_SECRET_KEY", value: ""},
+		{name: "Kratos public URL", variable: "CREDAR_KRATOS_PUBLIC_URL", value: "ftp://identity.example"},
+		{name: "Kratos admin URL", variable: "CREDAR_KRATOS_ADMIN_URL", value: "http://user:secret@identity.example"},
+		{name: "Kratos timeout", variable: "CREDAR_KRATOS_REQUEST_TIMEOUT_SECONDS", value: "0"},
 	}
 
 	for _, test := range tests {

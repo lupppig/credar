@@ -34,6 +34,9 @@ const (
 	defaultObjectStorageBucket     = "credar-local"
 	defaultObjectStorageAccessKey  = "local-access-key"
 	defaultObjectStorageSecretKey  = "local-secret-key"
+	defaultKratosPublicURL         = "http://127.0.0.1:4433"
+	defaultKratosAdminURL          = "http://127.0.0.1:4434"
+	defaultKratosTimeoutSeconds    = 2
 )
 
 var (
@@ -57,6 +60,7 @@ type Config struct {
 	Outbox           OutboxConfig
 	Redis            RedisConfig
 	ObjectStorage    ObjectStorageConfig
+	Kratos           KratosConfig
 }
 
 // NATSConfig contains the sensitive JetStream connection endpoint.
@@ -86,6 +90,14 @@ type ObjectStorageConfig struct {
 	Bucket    string
 	AccessKey Secret
 	SecretKey Secret
+}
+
+// KratosConfig identifies the server-side identity endpoints and bounds every
+// authentication request.
+type KratosConfig struct {
+	PublicURL string
+	AdminURL  string
+	Timeout   time.Duration
 }
 
 // DatabaseConfig contains the PostgreSQL connection and pool policy.
@@ -287,6 +299,23 @@ func Load(lookup LookupEnv) (Config, error) {
 		return Config{}, fmt.Errorf("CREDAR_OBJECT_STORAGE_SECRET_KEY must not be empty")
 	}
 
+	kratosPublicURL := valueOrDefault(lookup, "CREDAR_KRATOS_PUBLIC_URL", defaultKratosPublicURL)
+	if err := validateHTTPServiceURL(kratosPublicURL); err != nil {
+		return Config{}, fmt.Errorf("CREDAR_KRATOS_PUBLIC_URL is invalid: %w", err)
+	}
+	kratosAdminURL := valueOrDefault(lookup, "CREDAR_KRATOS_ADMIN_URL", defaultKratosAdminURL)
+	if err := validateHTTPServiceURL(kratosAdminURL); err != nil {
+		return Config{}, fmt.Errorf("CREDAR_KRATOS_ADMIN_URL is invalid: %w", err)
+	}
+	kratosTimeout, err := seconds(
+		lookup,
+		"CREDAR_KRATOS_REQUEST_TIMEOUT_SECONDS",
+		defaultKratosTimeoutSeconds,
+	)
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
 		Environment:      environment,
 		LogLevel:         logLevel,
@@ -316,6 +345,11 @@ func Load(lookup LookupEnv) (Config, error) {
 			Bucket:    objectStorageBucket,
 			AccessKey: Secret{value: objectStorageAccessKey},
 			SecretKey: Secret{value: objectStorageSecretKey},
+		},
+		Kratos: KratosConfig{
+			PublicURL: kratosPublicURL,
+			AdminURL:  kratosAdminURL,
+			Timeout:   kratosTimeout,
 		},
 	}, nil
 }
@@ -427,6 +461,23 @@ func validateObjectStorageEndpoint(endpoint string) error {
 	}
 	if parsed.User != nil || (parsed.Path != "" && parsed.Path != "/") || parsed.RawQuery != "" || parsed.Fragment != "" {
 		return fmt.Errorf("credentials, paths, queries, and fragments are not allowed")
+	}
+	return nil
+}
+
+func validateHTTPServiceURL(serviceURL string) error {
+	parsed, err := url.Parse(serviceURL)
+	if err != nil {
+		return fmt.Errorf("must be an HTTP URL")
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return fmt.Errorf("scheme must be http or https")
+	}
+	if parsed.Host == "" {
+		return fmt.Errorf("host is required")
+	}
+	if parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return fmt.Errorf("credentials, queries, and fragments are not allowed")
 	}
 	return nil
 }

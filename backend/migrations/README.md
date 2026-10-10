@@ -34,7 +34,8 @@ re-apply behavior.
 - Monetary amounts use integer minor units plus an ISO currency code; binary
   floating point is prohibited.
 
-The initial migration creates only the `platform` schema reserved for runtime
+The initial migration creates the `platform` schema reserved for runtime
 infrastructure. The second migration adds the transactional outbox and durable
-consumer receipts within that schema. Domain tables remain owned by their
-delivery phases.
+consumer receipts within that schema. Migration `000004` introduces the
+`identity` capability schema with application-user mappings and immutable audit
+events; later domain migrations remain owned by their delivery tasks.

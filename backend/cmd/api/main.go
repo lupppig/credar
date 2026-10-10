@@ -10,6 +10,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/lupppig/credar/backend/internal/identity"
+	identityhttp "github.com/lupppig/credar/backend/internal/identity/httpapi"
+	"github.com/lupppig/credar/backend/internal/identity/kratos"
+	identitypostgres "github.com/lupppig/credar/backend/internal/identity/postgres"
 	"github.com/lupppig/credar/backend/internal/platform/appruntime"
 	"github.com/lupppig/credar/backend/internal/platform/config"
 	"github.com/lupppig/credar/backend/internal/platform/database"
@@ -74,6 +78,18 @@ func main() {
 		os.Exit(1)
 	}
 	outboxRepository := outbox.NewRepository(databaseConnection)
+	kratosClient, err := kratos.New(kratos.Config{
+		PublicURL: configuration.Kratos.PublicURL,
+		AdminURL:  configuration.Kratos.AdminURL,
+		Timeout:   configuration.Kratos.Timeout,
+	})
+	if err != nil {
+		logger.Error("configure Kratos", "error", err)
+		os.Exit(1)
+	}
+	identityRepository := identitypostgres.New(databaseConnection, outboxRepository)
+	authenticator := identity.NewAuthenticator(kratosClient, identityRepository)
+	identityHandler := identityhttp.New(authenticator)
 	outboxRelay, err := outbox.NewRelay(outboxRepository, natsConnection, outbox.RelayConfig{
 		PollInterval:  configuration.Outbox.PollInterval,
 		LeaseDuration: configuration.Outbox.LeaseDuration,
@@ -97,6 +113,7 @@ func main() {
 		natsConnection,
 		redisConnection,
 		objectStore,
+		kratosClient,
 		proofConsumer,
 		outboxRelay,
 	)
@@ -104,7 +121,7 @@ func main() {
 		logger.Error("configure runtime dependencies", "error", err)
 		os.Exit(1)
 	}
-	server := platformhttp.New(configuration.HTTPAddress, logger, dependencies)
+	server := platformhttp.New(configuration.HTTPAddress, logger, dependencies, identityHandler)
 
 	shutdownSignals, stop := signal.NotifyContext(
 		context.Background(),

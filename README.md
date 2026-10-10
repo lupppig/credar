@@ -15,7 +15,7 @@ tenant-scoped authorization.
 | ------------------------------------------- | -------- | ---------------------------------------------------- |
 | 00 — Foundation and production CI           | Complete | Repository contracts and repeatable quality pipeline |
 | 01 — Local runtime and infrastructure spine | Complete | Healthy local stack and transaction-to-event proof   |
-| 02 — Identity, tenancy, and RBAC            | Active   | Identity and authorization contracts frozen          |
+| 02 — Identity, tenancy, and RBAC            | Active   | Kratos authentication and user mapping integrated    |
 
 P00-01 through P00-06 are complete. Foundational decisions and repository
 commands are recorded, both applications and production images build and pass
@@ -31,11 +31,13 @@ readiness-aware, isolated application adapters; and the Next.js enterprise
 shell centralizes validated environment and correlated backend access. One
 isolated command now builds the complete stack, waits on application and
 dependency health, and proves the correlated transaction-to-event path. See the
-[Phase 01 handoff](docs/handoffs/phase-01.md). The next task is
-**P02-02 — Integrate Kratos authentication**. P02-01 froze the application
+[Phase 01 handoff](docs/handoffs/phase-01.md). P02-01 froze the application
 identity mapping, explicit tenant context, membership lifecycle, system and
 custom roles, permission catalogue, audit semantics, APIs, and internal event
-payloads in [the identity contract](docs/identity-authorization.md).
+payloads in [the identity contract](docs/identity-authorization.md). P02-02 now
+validates Kratos sessions server-side and maps them exactly once to application
+users with transactional audit and outbox records. The next task is
+**P02-03 — Implement tenant and membership domain**.
 Accepted decisions are recorded in
 [`docs/adr`](docs/adr/README.md).
 
@@ -66,6 +68,7 @@ toolchains. The stable command surface is:
 | `make migrations-check`                 | Validate migration naming and up/down pairing    |
 | `make unit`                             | Run deterministic unit tests                     |
 | `make integration`                      | Run tests against real infrastructure boundaries |
+| `make authentication-test`              | Verify Kratos sessions and application mapping   |
 | `make infrastructure-test`              | Verify dependencies from isolated empty volumes  |
 | `make full-stack-test`                  | Prove the built stack and correlated event path  |
 | `make event-test`                       | Prove transactional event delivery and deduping  |

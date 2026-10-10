@@ -28,4 +28,16 @@ func TestMissingIdentifiersAreEmpty(t *testing.T) {
 	if requestcontext.CorrelationID(context.Background()) != "" {
 		t.Fatal("expected missing correlation ID to be empty")
 	}
+	if requestcontext.UserID(context.Background()) != "" {
+		t.Fatal("expected missing user ID to be empty")
+	}
+}
+
+func TestUserIDRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	ctx := requestcontext.WithUserID(context.Background(), "user")
+	if requestcontext.UserID(ctx) != "user" {
+		t.Fatalf("unexpected user ID %q", requestcontext.UserID(ctx))
+	}
 }

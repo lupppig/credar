@@ -117,6 +117,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
   /v1/platform/users/{user_id}/roles:
     put:
       operationId: replaceUserPlatformRoles
@@ -1215,6 +1217,17 @@ components:
             $ref: "#/components/schemas/Problem"
     NotFound:
       description: The resource is absent or outside the authorized tenant scope.
+      headers:
+        X-Request-ID:
+          $ref: "#/components/headers/RequestId"
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ServiceUnavailable:
+      description: A required service boundary is temporarily unavailable.
       headers:
         X-Request-ID:
           $ref: "#/components/headers/RequestId"

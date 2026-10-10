@@ -50,7 +50,7 @@ compose run --rm migrate up
   cd "${repository_root}/backend"
   CGO_ENABLED=0 \
     CREDAR_TEST_DATABASE_URL="postgres://credar:credar_local@127.0.0.1:${postgres_port}/credar?sslmode=disable" \
-    go test -tags=integration ./internal/platform/database
+    go test -tags=integration ./internal/platform/database ./internal/identity/postgres
 )
 
 echo "Database migrations, pooling, readiness, commit, and rollback behavior passed."
