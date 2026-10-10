@@ -20,10 +20,18 @@ type Authenticator interface {
 
 type Handler struct {
 	authenticator Authenticator
+	sessions      identity.SessionContextResolver
 }
 
-func New(authenticator Authenticator) *Handler {
-	return &Handler{authenticator: authenticator}
+func New(
+	authenticator Authenticator,
+	sessionResolvers ...identity.SessionContextResolver,
+) *Handler {
+	handler := &Handler{authenticator: authenticator}
+	if len(sessionResolvers) > 0 {
+		handler.sessions = sessionResolvers[0]
+	}
+	return handler
 }
 
 func (handler *Handler) RegisterRoutes(router *gin.Engine) {
@@ -59,14 +67,65 @@ func (handler *Handler) sessionContext(ginContext *gin.Context) {
 		return
 	}
 
+	memberships := make([]identity.MembershipSummary, 0)
+	var activeTenantID *string
+	if handler.sessions != nil {
+		var err error
+		memberships, activeTenantID, err = handler.sessions.ResolveSessionContext(
+			ginContext.Request.Context(),
+			user.ID,
+			ginContext.GetHeader("X-Tenant-ID"),
+		)
+		if err != nil {
+			writeSessionContextProblem(ginContext, err)
+			return
+		}
+	}
+	if activeTenantID != nil {
+		requestContext := requestcontext.WithTenantID(ginContext.Request.Context(), *activeTenantID)
+		ginContext.Request = ginContext.Request.WithContext(requestContext)
+	}
+
 	ginContext.JSON(http.StatusOK, struct {
-		User           identity.User `json:"user"`
-		Memberships    []any         `json:"memberships"`
-		ActiveTenantID *string       `json:"active_tenant_id"`
+		User           identity.User                `json:"user"`
+		Memberships    []identity.MembershipSummary `json:"memberships"`
+		ActiveTenantID *string                      `json:"active_tenant_id"`
 	}{
-		User:        user,
-		Memberships: make([]any, 0),
+		User:           user,
+		Memberships:    memberships,
+		ActiveTenantID: activeTenantID,
 	})
+}
+
+func writeSessionContextProblem(ginContext *gin.Context, err error) {
+	switch {
+	case errors.Is(err, identity.ErrInvalidTenantContext):
+		httpproblem.Write(
+			ginContext,
+			http.StatusBadRequest,
+			"invalid_tenant_context",
+			"Invalid tenant context",
+			"X-Tenant-ID must be a canonical UUIDv7.",
+		)
+	case errors.Is(err, identity.ErrMembershipInactive):
+		httpproblem.Write(
+			ginContext,
+			http.StatusForbidden,
+			"membership_inactive",
+			"Membership inactive",
+			"The selected tenant does not have an active membership for this user.",
+		)
+	case errors.Is(err, identity.ErrTenantContextUnavailable):
+		httpproblem.Write(
+			ginContext,
+			http.StatusServiceUnavailable,
+			"tenant_context_unavailable",
+			"Tenant context unavailable",
+			"Tenant membership context is temporarily unavailable.",
+		)
+	default:
+		httpproblem.InternalServerError(ginContext)
+	}
 }
 
 func writeAuthenticationProblem(ginContext *gin.Context, err error) {

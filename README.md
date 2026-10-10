@@ -15,7 +15,7 @@ tenant-scoped authorization.
 | ------------------------------------------- | -------- | ---------------------------------------------------- |
 | 00 — Foundation and production CI           | Complete | Repository contracts and repeatable quality pipeline |
 | 01 — Local runtime and infrastructure spine | Complete | Healthy local stack and transaction-to-event proof   |
-| 02 — Identity, tenancy, and RBAC            | Active   | Kratos authentication and user mapping integrated    |
+| 02 — Identity, tenancy, and RBAC            | Active   | Tenant and membership domain implemented             |
 
 P00-01 through P00-06 are complete. Foundational decisions and repository
 commands are recorded, both applications and production images build and pass
@@ -34,10 +34,12 @@ dependency health, and proves the correlated transaction-to-event path. See the
 [Phase 01 handoff](docs/handoffs/phase-01.md). P02-01 froze the application
 identity mapping, explicit tenant context, membership lifecycle, system and
 custom roles, permission catalogue, audit semantics, APIs, and internal event
-payloads in [the identity contract](docs/identity-authorization.md). P02-02 now
+payloads in [the identity contract](docs/identity-authorization.md). P02-02
 validates Kratos sessions server-side and maps them exactly once to application
-users with transactional audit and outbox records. The next task is
-**P02-03 — Implement tenant and membership domain**.
+users with transactional audit and outbox records. P02-03 adds idempotent tenant
+creation, membership lifecycle persistence, and explicit active-tenant session
+context. The next task is **P02-04 — Implement roles, permissions, and
+authorization**.
 Accepted decisions are recorded in
 [`docs/adr`](docs/adr/README.md).
 

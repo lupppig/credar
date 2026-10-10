@@ -31,6 +31,18 @@ func TestMissingIdentifiersAreEmpty(t *testing.T) {
 	if requestcontext.UserID(context.Background()) != "" {
 		t.Fatal("expected missing user ID to be empty")
 	}
+	if requestcontext.TenantID(context.Background()) != "" {
+		t.Fatal("expected missing tenant ID to be empty")
+	}
+}
+
+func TestTenantIDRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	ctx := requestcontext.WithTenantID(context.Background(), "tenant")
+	if requestcontext.TenantID(ctx) != "tenant" {
+		t.Fatalf("unexpected tenant ID %q", requestcontext.TenantID(ctx))
+	}
 }
 
 func TestUserIDRoundTrip(t *testing.T) {

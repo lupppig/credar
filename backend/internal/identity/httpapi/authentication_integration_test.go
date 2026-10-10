@@ -24,6 +24,8 @@ import (
 	"github.com/lupppig/credar/backend/internal/platform/identifier"
 	"github.com/lupppig/credar/backend/internal/platform/outbox"
 	"github.com/lupppig/credar/backend/internal/platform/requestcontext"
+	"github.com/lupppig/credar/backend/internal/tenancy"
+	tenancypostgres "github.com/lupppig/credar/backend/internal/tenancy/postgres"
 )
 
 func TestAuthenticationAgainstKratos(t *testing.T) {
@@ -63,7 +65,8 @@ func TestAuthenticationAgainstKratos(t *testing.T) {
 	}
 
 	repository := identitypostgres.New(databaseConnection, outbox.NewRepository(databaseConnection))
-	handler := New(identity.NewAuthenticator(kratosClient, repository))
+	tenancyRepository := tenancypostgres.New(databaseConnection, outbox.NewRepository(databaseConnection))
+	handler := New(identity.NewAuthenticator(kratosClient, repository), tenancyRepository)
 	router := gin.New()
 	handler.RegisterRoutes(router)
 
@@ -79,6 +82,42 @@ func TestAuthenticationAgainstKratos(t *testing.T) {
 	if valid.Code != http.StatusOK {
 		t.Fatalf("expected valid session to return 200, got %d: %s", valid.Code, valid.Body.String())
 	}
+	var validSession struct {
+		User identity.User `json:"user"`
+	}
+	if err := json.Unmarshal(valid.Body.Bytes(), &validSession); err != nil {
+		t.Fatalf("decode valid session: %v", err)
+	}
+	writeContext := requestcontext.WithIdentifiers(ctx, mustIntegrationUUIDv7(t), mustIntegrationUUIDv7(t))
+	writeContext = requestcontext.WithUserID(writeContext, validSession.User.ID)
+	createdTenant, err := tenancyRepository.CreateTenant(writeContext, tenancy.CreateTenantCommand{
+		Name:           "Authentication Test Tenant",
+		OwnerUserID:    validSession.User.ID,
+		IdempotencyKey: "authentication-test-tenant",
+	})
+	if err != nil {
+		t.Fatalf("create test tenant: %v", err)
+	}
+	selected := performIntegrationRequestWithTenant(t, router, sessionToken, createdTenant.Tenant.ID)
+	if selected.Code != http.StatusOK {
+		t.Fatalf("expected selected tenant context to return 200, got %d: %s", selected.Code, selected.Body.String())
+	}
+	var selectedSession struct {
+		Memberships    []identity.MembershipSummary `json:"memberships"`
+		ActiveTenantID *string                      `json:"active_tenant_id"`
+	}
+	if err := json.Unmarshal(selected.Body.Bytes(), &selectedSession); err != nil {
+		t.Fatalf("decode selected session: %v", err)
+	}
+	if len(selectedSession.Memberships) != 1 ||
+		selectedSession.ActiveTenantID == nil ||
+		*selectedSession.ActiveTenantID != createdTenant.Tenant.ID {
+		t.Fatalf("unexpected selected session context: %+v", selectedSession)
+	}
+	malformedTenant := performIntegrationRequestWithTenant(t, router, sessionToken, "not-a-uuid")
+	assertProblemCode(t, malformedTenant, http.StatusBadRequest, "invalid_tenant_context")
+	inactiveTenant := performIntegrationRequestWithTenant(t, router, sessionToken, mustIntegrationUUIDv7(t))
+	assertProblemCode(t, inactiveTenant, http.StatusForbidden, "membership_inactive")
 
 	invalid := performIntegrationRequest(t, router, "not-a-session")
 	assertProblemCode(t, invalid, http.StatusUnauthorized, "invalid_session")
@@ -98,7 +137,7 @@ func TestAuthenticationAgainstKratos(t *testing.T) {
 	conflict := performIntegrationRequest(t, router, sessionToken)
 	assertProblemCode(t, conflict, http.StatusConflict, "identity_mapping_conflict")
 
-	deadline := time.Now().Add(8 * time.Second)
+	deadline := time.Now().Add(12 * time.Second)
 	for {
 		expired := performIntegrationRequest(t, router, sessionToken)
 		if expired.Code == http.StatusUnauthorized {
@@ -228,6 +267,15 @@ func performIntegrationRequest(
 	router http.Handler,
 	sessionToken string,
 ) *httptest.ResponseRecorder {
+	return performIntegrationRequestWithTenant(t, router, sessionToken, "")
+}
+
+func performIntegrationRequestWithTenant(
+	t *testing.T,
+	router http.Handler,
+	sessionToken string,
+	tenantID string,
+) *httptest.ResponseRecorder {
 	t.Helper()
 	request := httptest.NewRequest(http.MethodGet, "/v1/session/context", nil)
 	requestID, err := identifier.NewUUIDv7()
@@ -238,9 +286,21 @@ func performIntegrationRequest(
 	if sessionToken != "" {
 		request.Header.Set("X-Session-Token", sessionToken)
 	}
+	if tenantID != "" {
+		request.Header.Set("X-Tenant-ID", tenantID)
+	}
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, request)
 	return recorder
+}
+
+func mustIntegrationUUIDv7(t *testing.T) string {
+	t.Helper()
+	value, err := identifier.NewUUIDv7()
+	if err != nil {
+		t.Fatalf("create UUIDv7: %v", err)
+	}
+	return value
 }
 
 func assertProblemCode(t *testing.T, recorder *httptest.ResponseRecorder, status int, code string) {

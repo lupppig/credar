@@ -12,7 +12,7 @@ readonly kratos_admin_port=$((45000 + port_offset))
 export CREDAR_POSTGRES_HOST_PORT="${postgres_port}"
 export CREDAR_KRATOS_PUBLIC_HOST_PORT="${kratos_public_port}"
 export CREDAR_KRATOS_ADMIN_HOST_PORT="${kratos_admin_port}"
-export CREDAR_KRATOS_SESSION_LIFESPAN="2s"
+export CREDAR_KRATOS_SESSION_LIFESPAN="5s"
 export CREDAR_DATABASE_URL="postgres://credar:credar_local@postgres:5432/credar?sslmode=disable"
 
 compose() {

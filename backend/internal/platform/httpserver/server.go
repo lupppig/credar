@@ -137,6 +137,7 @@ func logRequests(logger *slog.Logger) gin.HandlerFunc {
 			"request_id", context.Writer.Header().Get("X-Request-ID"),
 			"correlation_id", context.Writer.Header().Get("X-Correlation-ID"),
 			"user_id", requestcontext.UserID(context.Request.Context()),
+			"tenant_id", requestcontext.TenantID(context.Request.Context()),
 			"duration_ms", time.Since(startedAt).Milliseconds(),
 		)
 	}

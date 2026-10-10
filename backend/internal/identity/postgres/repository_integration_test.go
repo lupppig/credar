@@ -27,7 +27,12 @@ func TestIdentityMappingIsAtomicAndConflictSafe(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get pool: %v", err)
 	}
-	if _, err := pool.Exec(ctx, `TRUNCATE identity.audit_events, identity.users, platform.outbox_events`); err != nil {
+	if _, err := pool.Exec(
+		ctx,
+		`TRUNCATE platform.idempotency_records, tenancy.memberships,
+            tenancy.tenants, identity.audit_events, identity.users,
+            platform.outbox_events`,
+	); err != nil {
 		t.Fatalf("truncate identity state: %v", err)
 	}
 
@@ -97,7 +102,12 @@ func TestIdentityMappingRollsBackWhenOutboxInsertFails(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get pool: %v", err)
 	}
-	if _, err := pool.Exec(ctx, `TRUNCATE identity.audit_events, identity.users, platform.outbox_events`); err != nil {
+	if _, err := pool.Exec(
+		ctx,
+		`TRUNCATE platform.idempotency_records, tenancy.memberships,
+            tenancy.tenants, identity.audit_events, identity.users,
+            platform.outbox_events`,
+	); err != nil {
 		t.Fatalf("truncate identity state: %v", err)
 	}
 

@@ -38,4 +38,6 @@ The initial migration creates the `platform` schema reserved for runtime
 infrastructure. The second migration adds the transactional outbox and durable
 consumer receipts within that schema. Migration `000004` introduces the
 `identity` capability schema with application-user mappings and immutable audit
-events; later domain migrations remain owned by their delivery tasks.
+events. Migration `000005` adds the `tenancy` schema, tenant-scoped membership
+constraints, and durable platform idempotency records. Later domain migrations
+remain owned by their delivery tasks.

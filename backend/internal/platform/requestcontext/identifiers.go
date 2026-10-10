@@ -11,6 +11,7 @@ const (
 	requestIDKey key = iota
 	correlationIDKey
 	userIDKey
+	tenantIDKey
 )
 
 // WithIdentifiers returns a child context containing request and correlation
@@ -44,5 +45,18 @@ func WithUserID(parent context.Context, userID string) context.Context {
 // string when the request is anonymous.
 func UserID(ctx context.Context) string {
 	value, _ := ctx.Value(userIDKey).(string)
+	return value
+}
+
+// WithTenantID returns a child context containing the explicitly selected and
+// validated tenant identifier.
+func WithTenantID(parent context.Context, tenantID string) context.Context {
+	return context.WithValue(parent, tenantIDKey, tenantID)
+}
+
+// TenantID returns the selected tenant identifier, or an empty string when no
+// tenant context was supplied.
+func TenantID(ctx context.Context) string {
+	value, _ := ctx.Value(tenantIDKey).(string)
 	return value
 }

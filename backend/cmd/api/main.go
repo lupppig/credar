@@ -26,6 +26,7 @@ import (
 	"github.com/lupppig/credar/backend/internal/platform/objectstorage"
 	"github.com/lupppig/credar/backend/internal/platform/outbox"
 	"github.com/lupppig/credar/backend/internal/platform/redisclient"
+	tenancypostgres "github.com/lupppig/credar/backend/internal/tenancy/postgres"
 )
 
 func main() {
@@ -88,8 +89,9 @@ func main() {
 		os.Exit(1)
 	}
 	identityRepository := identitypostgres.New(databaseConnection, outboxRepository)
+	tenancyRepository := tenancypostgres.New(databaseConnection, outboxRepository)
 	authenticator := identity.NewAuthenticator(kratosClient, identityRepository)
-	identityHandler := identityhttp.New(authenticator)
+	identityHandler := identityhttp.New(authenticator, tenancyRepository)
 	outboxRelay, err := outbox.NewRelay(outboxRepository, natsConnection, outbox.RelayConfig{
 		PollInterval:  configuration.Outbox.PollInterval,
 		LeaseDuration: configuration.Outbox.LeaseDuration,
