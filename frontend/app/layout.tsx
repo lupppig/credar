@@ -60,9 +60,6 @@ export default function RootLayout({
               <Link href="/#use-cases">Use cases</Link>
               <Link href="/#why-credar">Why Credar</Link>
               <a href="/auth/login">Sign in</a>
-              <Link className="nav-action" href="/console">
-                Open console
-              </Link>
             </nav>
           </header>
           <main id="main-content" className="app-content">

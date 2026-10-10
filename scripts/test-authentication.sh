@@ -38,6 +38,13 @@ compose config --quiet
 compose up --detach --wait --wait-timeout 180 postgres kratos
 compose run --rm migrate up
 
+registration_flow="$(curl --fail --silent --show-error \
+  "http://127.0.0.1:${kratos_public_port}/self-service/registration/api")"
+if [[ "${registration_flow}" != *'"name":"password"'* ]]; then
+  echo "Kratos registration flow did not expose a password field." >&2
+  exit 1
+fi
+
 (
   cd "${repository_root}/backend"
   CGO_ENABLED=0 \

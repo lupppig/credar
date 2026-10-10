@@ -172,13 +172,6 @@ a:focus-visible {
   color: var(--pine-dark);
 }
 
-.site-nav .nav-action {
-  padding: 0.65rem 0.9rem;
-  color: white;
-  background: var(--pine-dark);
-  border-radius: 0.35rem;
-}
-
 .app-content {
   width: min(82rem, calc(100% - 3rem));
   min-width: 0;
@@ -825,11 +818,6 @@ h3 {
   .brand-symbol {
     width: 2.4rem;
     height: 2.4rem;
-  }
-
-  .site-nav .nav-action {
-    padding-inline: 0.7rem;
-    font-size: 0.7rem;
   }
 }
 
@@ -1488,7 +1476,7 @@ h3 {
 }
 
 @media (max-width: 48rem) {
-  .site-nav > a:not(.nav-action) {
+  .site-nav > a:not(:last-child) {
     display: none;
   }
 
