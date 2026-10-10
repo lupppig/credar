@@ -29,6 +29,8 @@ cleanup() {
 trap cleanup EXIT
 
 compose config --quiet
+"${repository_root}/scripts/pull-compose-images.sh" \
+  "${project_name}" "${compose_file}" redis seaweedfs
 compose up --detach --wait --wait-timeout 120 redis seaweedfs
 
 (

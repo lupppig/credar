@@ -50,6 +50,9 @@ trap cleanup EXIT
 
 compose config --quiet
 compose down --volumes --remove-orphans >/dev/null 2>&1 || true
+"${repository_root}/scripts/pull-compose-images.sh" \
+  "${project_name}" "${compose_file}" \
+  postgres migrate nats redis seaweedfs kratos-migrate kratos
 compose up --detach --build --wait --wait-timeout 240 postgres nats redis seaweedfs kratos backend
 
 readonly backend_url="http://$(compose port backend 8080)"

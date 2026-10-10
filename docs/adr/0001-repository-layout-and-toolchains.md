@@ -27,7 +27,7 @@ Use a monorepo with these top-level ownership boundaries:
 
 Pin these initial toolchains:
 
-- Go 1.27.1.
+- Go 1.27.2.
 - Node.js 24.21.0 LTS.
 - Next.js 16.3.3 Active LTS.
 - TypeScript 6.0.x, pinned to an exact resolved version in the lockfile.

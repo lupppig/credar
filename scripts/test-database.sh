@@ -27,6 +27,8 @@ cleanup() {
 trap cleanup EXIT
 
 compose config --quiet
+"${repository_root}/scripts/pull-compose-images.sh" \
+  "${project_name}" "${compose_file}" postgres migrate
 compose up --detach --wait --wait-timeout 120 postgres
 
 compose run --rm migrate up

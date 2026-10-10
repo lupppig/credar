@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly expected_go="go1.27.1"
+readonly expected_go="go1.27.2"
 readonly expected_node="v24.21.0"
 readonly expected_pnpm="12.5.1"
 failed=0

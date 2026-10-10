@@ -33,6 +33,9 @@ trap cleanup EXIT
 
 compose config --quiet
 compose down --volumes --remove-orphans >/dev/null 2>&1 || true
+"${repository_root}/scripts/pull-compose-images.sh" \
+  "${project_name}" "${compose_file}" \
+  postgres nats redis seaweedfs kratos-migrate kratos
 compose up --detach --wait --wait-timeout 180 postgres nats redis seaweedfs kratos
 
 postgres_database="$(compose exec -T postgres psql --username credar --dbname credar --tuples-only --no-align --command 'SELECT current_database()')"

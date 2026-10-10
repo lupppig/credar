@@ -31,6 +31,8 @@ cleanup() {
 trap cleanup EXIT
 
 compose config --quiet
+"${repository_root}/scripts/pull-compose-images.sh" \
+  "${project_name}" "${compose_file}" postgres nats migrate
 compose up --detach --wait --wait-timeout 120 postgres nats
 compose run --rm migrate up
 
