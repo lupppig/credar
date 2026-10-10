@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_CREDAR_API_BASE_URL: publicEnvironment.apiBaseUrl,
   },
+  experimental: {
+    useTypeScriptCli: false,
+  },
   output: "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
