@@ -76,7 +76,7 @@ compose up --detach --build --wait --wait-timeout 240 postgres nats redis seawee
 readonly backend_url="http://$(compose port backend 8080)"
 export NEXT_PUBLIC_CREDAR_API_BASE_URL="${backend_url}"
 compose build frontend
-compose up --detach --no-build --wait --wait-timeout 240 frontend
+compose up --detach --no-build --no-deps --wait --wait-timeout 240 frontend
 readonly frontend_url="http://$(compose port frontend 3000)"
 
 health_response="$(wait_for_response "${backend_url}/healthz" '{"status":"ok"}')"
