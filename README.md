@@ -15,6 +15,7 @@ tenant-scoped authorization.
 | ------------------------------------------- | -------- | ---------------------------------------------------- |
 | 00 — Foundation and production CI           | Complete | Repository contracts and repeatable quality pipeline |
 | 01 — Local runtime and infrastructure spine | Complete | Healthy local stack and transaction-to-event proof   |
+| 02 — Identity, tenancy, and RBAC            | Active   | Identity and authorization contracts frozen          |
 
 P00-01 through P00-06 are complete. Foundational decisions and repository
 commands are recorded, both applications and production images build and pass
@@ -31,7 +32,10 @@ shell centralizes validated environment and correlated backend access. One
 isolated command now builds the complete stack, waits on application and
 dependency health, and proves the correlated transaction-to-event path. See the
 [Phase 01 handoff](docs/handoffs/phase-01.md). The next task is
-**P02-01 — Freeze identity and authorization contracts**.
+**P02-02 — Integrate Kratos authentication**. P02-01 froze the application
+identity mapping, explicit tenant context, membership lifecycle, system and
+custom roles, permission catalogue, audit semantics, APIs, and internal event
+payloads in [the identity contract](docs/identity-authorization.md).
 Accepted decisions are recorded in
 [`docs/adr`](docs/adr/README.md).
 

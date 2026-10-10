@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:credar:schema:events:internal:identity.user_linked:v1",
+  "title": "identity.user_linked data v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id"],
+  "properties": {
+    "user_id": { "$ref": "#/$defs/uuidV7" }
+  },
+  "$defs": {
+    "uuidV7": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    }
+  }
+}

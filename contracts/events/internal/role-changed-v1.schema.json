@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:credar:schema:events:internal:role.changed:v1",
+  "title": "role.changed data v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["role_id", "name", "change", "permission_names"],
+  "properties": {
+    "role_id": { "$ref": "#/$defs/uuidV7" },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[A-Za-z][A-Za-z0-9 _-]*$"
+    },
+    "change": {
+      "type": "string",
+      "enum": ["CREATED", "UPDATED", "DELETED"]
+    },
+    "permission_names": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+      }
+    }
+  },
+  "$defs": {
+    "uuidV7": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    }
+  }
+}

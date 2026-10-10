@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:credar:schema:events:internal:membership.status_changed:v1",
+  "title": "membership.status_changed data v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["membership_id", "user_id", "previous_status", "status"],
+  "properties": {
+    "membership_id": { "$ref": "#/$defs/uuidV7" },
+    "user_id": { "$ref": "#/$defs/uuidV7" },
+    "previous_status": {
+      "oneOf": [
+        { "type": "string", "enum": ["ACTIVE", "DISABLED"] },
+        { "type": "null" }
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "DISABLED", "REMOVED"]
+    }
+  },
+  "$defs": {
+    "uuidV7": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    }
+  }
+}

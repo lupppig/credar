@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:credar:schema:events:internal:identity.platform_roles_changed:v1",
+  "title": "identity.platform_roles_changed data v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "role_ids"],
+  "properties": {
+    "user_id": { "$ref": "#/$defs/uuidV7" },
+    "role_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/uuidV7" }
+    }
+  },
+  "$defs": {
+    "uuidV7": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    }
+  }
+}

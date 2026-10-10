@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:credar:schema:events:internal:tenant.created:v1",
+  "title": "tenant.created data v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tenant_id", "name", "created_by_user_id"],
+  "properties": {
+    "tenant_id": { "$ref": "#/$defs/uuidV7" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "created_by_user_id": { "$ref": "#/$defs/uuidV7" }
+  },
+  "$defs": {
+    "uuidV7": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    }
+  }
+}

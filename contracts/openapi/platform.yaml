@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Credar Platform API
-  version: 0.1.0
+  version: 0.2.0
   description: >-
     Shared transport conventions for the multi-tenant credit platform. Product
     resources are introduced by their owning delivery phases.
@@ -11,6 +11,16 @@ servers:
 tags:
   - name: Operations
     description: Unversioned runtime probes.
+  - name: Session
+    description: Authenticated application identity and available tenant context.
+  - name: Tenants
+    description: Platform-authorized tenant lifecycle.
+  - name: Memberships
+    description: Tenant-scoped membership lifecycle and role assignment.
+  - name: Roles
+    description: Tenant-scoped system and custom roles.
+  - name: Audit
+    description: Immutable tenant-scoped administrative history.
 paths:
   /healthz:
     get:
@@ -77,7 +87,516 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Readiness"
+  /v1/session/context:
+    get:
+      operationId: getSessionContext
+      summary: Resolve the authenticated application user and tenant access
+      tags: [Session]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/OptionalTenantId"
+      responses:
+        "200":
+          description: The authenticated user and active memberships.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionContext"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/platform/users/{user_id}/roles:
+    put:
+      operationId: replaceUserPlatformRoles
+      summary: Replace platform-role assignments for an application user
+      tags: [Roles]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplacePlatformRolesRequest"
+      responses:
+        "200":
+          description: The complete platform-role assignment set was replaced.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformRoleAssignment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/tenants:
+    get:
+      operationId: listTenants
+      summary: List tenants visible to a platform administrator
+      tags: [Tenants]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/PageLimit"
+        - $ref: "#/components/parameters/PageAfter"
+      responses:
+        "200":
+          description: A stable page of tenants ordered by creation time and ID.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: createTenant
+      summary: Create a tenant and its initial owner membership
+      tags: [Tenants]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTenantRequest"
+      responses:
+        "201":
+          description: The tenant and initial owner membership were created atomically.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTenantResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/tenant:
+    get:
+      operationId: getActiveTenant
+      summary: Read the active tenant selected by X-Tenant-ID
+      tags: [Tenants]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: The active tenant.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateActiveTenant
+      summary: Update mutable settings for the active tenant
+      tags: [Tenants]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTenantRequest"
+      responses:
+        "200":
+          description: The updated tenant.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/memberships:
+    get:
+      operationId: listMemberships
+      summary: List memberships in the active tenant
+      tags: [Memberships]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PageLimit"
+        - $ref: "#/components/parameters/PageAfter"
+      responses:
+        "200":
+          description: A stable page ordered by creation time and ID.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MembershipList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: createMembership
+      summary: Add an existing application user to the active tenant
+      tags: [Memberships]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMembershipRequest"
+      responses:
+        "201":
+          description: The active membership was created.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Membership"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/memberships/{membership_id}:
+    patch:
+      operationId: updateMembershipStatus
+      summary: Change a membership status in the active tenant
+      tags: [Memberships]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMembershipStatusRequest"
+      responses:
+        "200":
+          description: The membership status was changed.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Membership"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/memberships/{membership_id}/roles:
+    put:
+      operationId: replaceMembershipRoles
+      summary: Replace role assignments for an active or disabled membership
+      tags: [Memberships]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/MembershipId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplaceMembershipRolesRequest"
+      responses:
+        "200":
+          description: The complete role assignment set was replaced.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Membership"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/roles:
+    get:
+      operationId: listRoles
+      summary: List system and custom roles available in the active tenant
+      tags: [Roles]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: System roles followed by tenant custom roles.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: createRole
+      summary: Create a custom role in the active tenant
+      tags: [Roles]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WriteRoleRequest"
+      responses:
+        "201":
+          description: The custom role was created.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/roles/{role_id}:
+    patch:
+      operationId: updateRole
+      summary: Update a custom role in the active tenant
+      tags: [Roles]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/RoleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WriteRoleRequest"
+      responses:
+        "200":
+          description: The custom role was updated.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      operationId: deleteRole
+      summary: Delete an unassigned custom role in the active tenant
+      tags: [Roles]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/RoleId"
+      responses:
+        "204":
+          description: The custom role was deleted.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /v1/audit-events:
+    get:
+      operationId: listAuditEvents
+      summary: List immutable audit events for the active tenant
+      tags: [Audit]
+      security:
+        - KratosSessionCookie: []
+        - KratosSessionToken: []
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PageLimit"
+        - $ref: "#/components/parameters/PageAfter"
+      responses:
+        "200":
+          description: A newest-first stable page of audit events.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+            X-Correlation-ID:
+              $ref: "#/components/headers/CorrelationId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditEventList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 components:
+  securitySchemes:
+    KratosSessionCookie:
+      type: apiKey
+      in: cookie
+      name: ory_kratos_session
+      description: Browser session cookie issued and validated by Kratos.
+    KratosSessionToken:
+      type: apiKey
+      in: header
+      name: X-Session-Token
+      description: Native/API session token issued and validated by Kratos.
   headers:
     RequestId:
       description: UUIDv7 identifying this HTTP request and response attempt.
@@ -95,6 +614,31 @@ components:
       in: header
       required: true
       description: Explicit active tenant context; it does not grant authorization.
+      schema:
+        $ref: "#/components/schemas/UUIDv7"
+    OptionalTenantId:
+      name: X-Tenant-ID
+      in: header
+      required: false
+      description: Optional tenant context to validate and echo in session resolution.
+      schema:
+        $ref: "#/components/schemas/UUIDv7"
+    MembershipId:
+      name: membership_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/UUIDv7"
+    RoleId:
+      name: role_id
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/UUIDv7"
+    UserId:
+      name: user_id
+      in: path
+      required: true
       schema:
         $ref: "#/components/schemas/UUIDv7"
     RequestId:
@@ -203,6 +747,382 @@ components:
           description: Opaque cursor for the next page, or null at the end.
         has_more:
           type: boolean
+    Timestamp:
+      type: string
+      format: date-time
+    UserStatus:
+      type: string
+      enum: [ACTIVE, DISABLED]
+    MembershipStatus:
+      type: string
+      enum: [ACTIVE, DISABLED, REMOVED]
+    RoleScope:
+      type: string
+      enum: [PLATFORM, TENANT]
+    RoleKind:
+      type: string
+      enum: [SYSTEM, CUSTOM]
+    User:
+      type: object
+      additionalProperties: false
+      required: [id, email, status, created_at, updated_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/UUIDv7"
+        email:
+          type: string
+          format: email
+        status:
+          $ref: "#/components/schemas/UserStatus"
+        created_at:
+          $ref: "#/components/schemas/Timestamp"
+        updated_at:
+          $ref: "#/components/schemas/Timestamp"
+    TenantSummary:
+      type: object
+      additionalProperties: false
+      required: [id, name, status]
+      properties:
+        id:
+          $ref: "#/components/schemas/UUIDv7"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        status:
+          type: string
+          enum: [ACTIVE, DISABLED]
+    Tenant:
+      type: object
+      additionalProperties: false
+      required: [id, name, status, created_at, updated_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/UUIDv7"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        status:
+          type: string
+          enum: [ACTIVE, DISABLED]
+        created_at:
+          $ref: "#/components/schemas/Timestamp"
+        updated_at:
+          $ref: "#/components/schemas/Timestamp"
+    Permission:
+      type: object
+      additionalProperties: false
+      required: [name, scope, description]
+      properties:
+        name:
+          type: string
+          pattern: "^(platform\\.)?[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+        scope:
+          $ref: "#/components/schemas/RoleScope"
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+    Role:
+      type: object
+      additionalProperties: false
+      required:
+        [id, tenant_id, name, scope, kind, permissions, created_at, updated_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/UUIDv7"
+        tenant_id:
+          oneOf:
+            - $ref: "#/components/schemas/UUIDv7"
+            - type: "null"
+          description: Null for platform roles and shared tenant system roles.
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: "^[A-Za-z][A-Za-z0-9 _-]*$"
+        scope:
+          $ref: "#/components/schemas/RoleScope"
+        kind:
+          $ref: "#/components/schemas/RoleKind"
+        permissions:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/Permission"
+        created_at:
+          $ref: "#/components/schemas/Timestamp"
+        updated_at:
+          $ref: "#/components/schemas/Timestamp"
+    PlatformRoleAssignment:
+      type: object
+      additionalProperties: false
+      required: [user, roles]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+    MembershipSummary:
+      type: object
+      additionalProperties: false
+      required: [id, tenant, status, role_names]
+      properties:
+        id:
+          $ref: "#/components/schemas/UUIDv7"
+        tenant:
+          $ref: "#/components/schemas/TenantSummary"
+        status:
+          $ref: "#/components/schemas/MembershipStatus"
+        role_names:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+    Membership:
+      type: object
+      additionalProperties: false
+      required: [id, tenant_id, user, status, roles, created_at, updated_at]
+      properties:
+        id:
+          $ref: "#/components/schemas/UUIDv7"
+        tenant_id:
+          $ref: "#/components/schemas/UUIDv7"
+        user:
+          $ref: "#/components/schemas/User"
+        status:
+          $ref: "#/components/schemas/MembershipStatus"
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+        created_at:
+          $ref: "#/components/schemas/Timestamp"
+        updated_at:
+          $ref: "#/components/schemas/Timestamp"
+        disabled_at:
+          oneOf:
+            - $ref: "#/components/schemas/Timestamp"
+            - type: "null"
+        removed_at:
+          oneOf:
+            - $ref: "#/components/schemas/Timestamp"
+            - type: "null"
+    SessionContext:
+      type: object
+      additionalProperties: false
+      required: [user, memberships, active_tenant_id]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        memberships:
+          type: array
+          items:
+            $ref: "#/components/schemas/MembershipSummary"
+        active_tenant_id:
+          oneOf:
+            - $ref: "#/components/schemas/UUIDv7"
+            - type: "null"
+    TenantList:
+      type: object
+      additionalProperties: false
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tenant"
+        page:
+          $ref: "#/components/schemas/Page"
+    MembershipList:
+      type: object
+      additionalProperties: false
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Membership"
+        page:
+          $ref: "#/components/schemas/Page"
+    RoleList:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+    CreateTenantRequest:
+      type: object
+      additionalProperties: false
+      required: [name, owner_user_id]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        owner_user_id:
+          $ref: "#/components/schemas/UUIDv7"
+    CreateTenantResponse:
+      type: object
+      additionalProperties: false
+      required: [tenant, owner_membership]
+      properties:
+        tenant:
+          $ref: "#/components/schemas/Tenant"
+        owner_membership:
+          $ref: "#/components/schemas/Membership"
+    UpdateTenantRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+    CreateMembershipRequest:
+      type: object
+      additionalProperties: false
+      required: [user_id, role_ids]
+      properties:
+        user_id:
+          $ref: "#/components/schemas/UUIDv7"
+        role_ids:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/UUIDv7"
+    UpdateMembershipStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, DISABLED, REMOVED]
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+    ReplaceMembershipRolesRequest:
+      type: object
+      additionalProperties: false
+      required: [role_ids]
+      properties:
+        role_ids:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/UUIDv7"
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+    ReplacePlatformRolesRequest:
+      type: object
+      additionalProperties: false
+      required: [role_ids]
+      properties:
+        role_ids:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/UUIDv7"
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+    WriteRoleRequest:
+      type: object
+      additionalProperties: false
+      required: [name, permission_names]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: "^[A-Za-z][A-Za-z0-9 _-]*$"
+        permission_names:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            pattern: "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+    AuditActor:
+      type: object
+      additionalProperties: false
+      required: [type, id]
+      properties:
+        type:
+          type: string
+          enum: [USER, SYSTEM, WORKER]
+        id:
+          oneOf:
+            - $ref: "#/components/schemas/UUIDv7"
+            - type: "null"
+    AuditEvent:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          action,
+          actor,
+          tenant_id,
+          target_type,
+          target_id,
+          occurred_at,
+          correlation_id,
+        ]
+      properties:
+        id:
+          $ref: "#/components/schemas/UUIDv7"
+        action:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+        actor:
+          $ref: "#/components/schemas/AuditActor"
+        tenant_id:
+          oneOf:
+            - $ref: "#/components/schemas/UUIDv7"
+            - type: "null"
+        target_type:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*$"
+        target_id:
+          $ref: "#/components/schemas/UUIDv7"
+        occurred_at:
+          $ref: "#/components/schemas/Timestamp"
+        correlation_id:
+          $ref: "#/components/schemas/UUIDv7"
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        changes:
+          type: object
+          additionalProperties:
+            type: [string, number, boolean, "null"]
+    AuditEventList:
+      type: object
+      additionalProperties: false
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditEvent"
+        page:
+          $ref: "#/components/schemas/Page"
     ProblemField:
       type: object
       additionalProperties: false
@@ -262,18 +1182,44 @@ components:
             $ref: "#/components/schemas/Problem"
     Unauthorized:
       description: Authentication is missing or invalid.
+      headers:
+        X-Request-ID:
+          $ref: "#/components/headers/RequestId"
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     Forbidden:
       description: The authenticated principal lacks permission or resource scope.
+      headers:
+        X-Request-ID:
+          $ref: "#/components/headers/RequestId"
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
       content:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
     Conflict:
       description: The request conflicts with current state or idempotency history.
+      headers:
+        X-Request-ID:
+          $ref: "#/components/headers/RequestId"
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: The resource is absent or outside the authorized tenant scope.
+      headers:
+        X-Request-ID:
+          $ref: "#/components/headers/RequestId"
+        X-Correlation-ID:
+          $ref: "#/components/headers/CorrelationId"
       content:
         application/problem+json:
           schema:

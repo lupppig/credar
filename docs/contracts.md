@@ -39,6 +39,10 @@ Protected tenant operations require an explicit `X-Tenant-ID`. Authentication,
 membership, permission, and resource ownership are still verified server-side;
 the header is context, not authorization.
 
+The Phase 02 identity, membership lifecycle, built-in roles, permission
+catalogue, errors, audit actions, and integration events are defined in
+[`identity-authorization.md`](identity-authorization.md).
+
 ## Pagination
 
 Collections use opaque cursor pagination with `page[limit]` and `page[after]`.
